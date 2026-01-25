@@ -1,0 +1,44 @@
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# IDE/Editor folders
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# Node modules (if added later)
+node_modules/
+
+# Build outputs (if added later)
+dist/
+build/
+
+# Logs
+*.log
+npm-debug.log*
+
+# Environment variables
+.env
+.env.local
+.env.*.local
+
+# Temporary files
+*.tmp
+*.temp
+
+# Coverage reports
+coverage/
+
+# Claude Code
+.claude/
+
+# Internal docs
+docs/
