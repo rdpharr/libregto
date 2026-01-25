@@ -411,6 +411,25 @@
   font-size: var(--text-xl);
 }
 
+.stage-card--coming-soon {
+  opacity: 0.7;
+  cursor: default;
+}
+
+.stage-card__badge {
+  position: absolute;
+  top: var(--space-3);
+  right: var(--space-3);
+  background: linear-gradient(135deg, var(--color-primary-500), var(--color-primary-600));
+  color: var(--color-bg-primary);
+  font-size: var(--text-xs);
+  font-weight: var(--font-semibold);
+  padding: var(--space-1) var(--space-2);
+  border-radius: var(--radius-full);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
 /* ========== Module Cards ========== */
 
 .module-card {

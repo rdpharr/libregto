@@ -232,6 +232,32 @@ h6, .h6 {
   text-decoration-thickness: 2px;
 }
 
+/* Coffee link variant */
+.link--coffee {
+  color: var(--color-warning);
+}
+
+.link--coffee:hover {
+  color: var(--color-warning);
+  filter: brightness(1.2);
+}
+
+/* Feedback links container */
+.feedback-links {
+  margin-top: var(--space-6);
+  padding-top: var(--space-4);
+  border-top: 1px solid var(--color-surface-border);
+  text-align: center;
+}
+
+.feedback-links p {
+  margin-bottom: var(--space-2);
+}
+
+.feedback-links p:last-child {
+  margin-bottom: 0;
+}
+
 /* ========== Focus States ========== */
 :focus {
   outline: none;

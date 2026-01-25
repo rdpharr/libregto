@@ -3,8 +3,33 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Hold'em Trainer - Master GTO Poker</title>
-  <meta name="description" content="Learn GTO poker strategy through interactive lessons and quizzes. Master hand strength, position, equity, and ranges.">
+
+  <!-- Primary SEO Meta Tags -->
+  <title>LibreGTO - Free Open Source GTO Poker Trainer | Learn Texas Holdem Strategy</title>
+  <meta name="description" content="LibreGTO is a 100% free, open source GTO poker trainer. Master preflop ranges, hand strength, position play, and equity through interactive lessons and quizzes. No subscription, no paywall - forever free.">
+  <meta name="keywords" content="free GTO poker trainer, open source poker trainer, GTO poker training app, Texas Holdem trainer, free poker trainer, learn GTO poker, poker range trainer, preflop trainer, poker strategy practice, libre poker, free poker lessons, open source poker">
+  <meta name="robots" content="index, follow">
+  <meta name="author" content="LibreGTO">
+  <link rel="canonical" href="https://libregto.com/">
+
+  <!-- Open Graph / Facebook -->
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://libregto.com/">
+  <meta property="og:title" content="LibreGTO - Free Open Source GTO Poker Trainer">
+  <meta property="og:description" content="100% free, open source GTO poker trainer. Master preflop ranges, position play, equity calculations, and hand strength. No subscription required - forever free.">
+  <meta property="og:image" content="https://libregto.com/images/og-image.png">
+  <meta property="og:site_name" content="LibreGTO">
+
+  <!-- Twitter Card -->
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:url" content="https://libregto.com/">
+  <meta name="twitter:title" content="LibreGTO - Free Open Source GTO Poker Trainer">
+  <meta name="twitter:description" content="100% free, open source GTO poker trainer. Master preflop ranges, position play, and equity. No subscription, no paywall.">
+  <meta name="twitter:image" content="https://libregto.com/images/og-image.png">
+
+  <!-- Additional SEO -->
+  <meta name="application-name" content="LibreGTO">
+  <meta name="theme-color" content="#1a1a2e">
 
   <!-- Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -16,16 +41,100 @@
   <link rel="stylesheet" href="css/base.css">
   <link rel="stylesheet" href="css/components.css">
   <link rel="stylesheet" href="css/pages.css">
+  <link rel="stylesheet" href="css/drills.css">
 
   <!-- Favicon -->
   <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>♠</text></svg>">
+
+  <!-- Structured Data (JSON-LD) -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "WebApplication",
+    "name": "LibreGTO",
+    "alternateName": "Libre GTO Poker Trainer",
+    "description": "100% free, open source GTO poker training application. Master preflop ranges, hand strength, position play, and equity calculations through interactive lessons and quizzes. No subscription, no paywall - forever free.",
+    "url": "https://libregto.com/",
+    "applicationCategory": "EducationalApplication",
+    "operatingSystem": "Web Browser",
+    "license": "https://opensource.org/licenses/MIT",
+    "isAccessibleForFree": true,
+    "offers": {
+      "@type": "Offer",
+      "price": "0",
+      "priceCurrency": "USD",
+      "availability": "https://schema.org/InStock"
+    },
+    "featureList": [
+      "Free Forever - No Subscription",
+      "Open Source Code",
+      "GTO Poker Strategy Training",
+      "Preflop Range Charts",
+      "Position Play Lessons",
+      "Equity Calculations",
+      "Interactive Quizzes",
+      "Hand Strength Analysis"
+    ],
+    "keywords": "free GTO poker trainer, open source poker trainer, GTO poker training app, Texas Holdem trainer, free poker lessons"
+  }
+  </script>
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "Organization",
+    "name": "LibreGTO",
+    "url": "https://libregto.com/",
+    "logo": "https://libregto.com/images/logo.png",
+    "sameAs": []
+  }
+  </script>
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    "mainEntity": [
+      {
+        "@type": "Question",
+        "name": "What is GTO poker?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "GTO (Game Theory Optimal) poker is a strategy approach that makes your play unexploitable by opponents. It involves mathematically balanced ranges and decisions that maximize expected value over time."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "Is LibreGTO really free?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "Yes, LibreGTO is 100% free and open source. Unlike GTO Wizard or DTO Poker which charge $30-99/month, LibreGTO has no subscription, no paywall, and no hidden costs. The code is open source so it will remain free forever."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "Why is LibreGTO free when other GTO trainers cost money?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "LibreGTO is an open source project built by the poker community, for the poker community. We believe GTO poker education should be accessible to everyone, not just those who can afford expensive subscriptions."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "How do I learn poker ranges with LibreGTO?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "LibreGTO teaches poker ranges through interactive lessons and drills. You'll learn which hands to play from each position and how to construct balanced opening, 3-betting, and defending ranges - all completely free."
+        }
+      }
+    ]
+  }
+  </script>
 </head>
 <body>
   <div class="app" id="app">
     <!-- Header -->
     <header class="header">
       <a href="#/" class="header__logo">
-        <span class="header__logo-text">Hold'em<span class="header__logo-accent">Trainer</span></span>
+        <span class="header__logo-text">Libre<span class="header__logo-accent">GTO</span></span>
       </a>
       <nav class="header__nav">
         <a href="#/settings" class="header__link">Settings</a>

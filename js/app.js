@@ -1,14 +1,21 @@
 /**
- * Hold'em Trainer - Main Application
+ * LibreGTO - Main Application
+ * Free & Open Source GTO Poker Trainer
  * Initializes routing and renders pages
  */
 
 import { router } from './router.js';
-import { loadProgress, getStageProgress, isStageUnlocked, getCurrentModule, getOverallProgress } from './storage.js';
+import { loadProgress, getStageProgress, isStageUnlocked, getCurrentModule, getOverallProgress, getDrillStats } from './storage.js';
 import { renderHandStrengthModule } from './modules/handStrength.js';
 import { renderPositionModule } from './modules/position.js';
 import { renderEquityModule } from './modules/equity.js';
 import { renderRangesModule } from './modules/ranges.js';
+import { renderDrillsHub } from './drills/index.js';
+import { renderHandRankingDrill } from './drills/handRankDrill.js';
+import { renderOpenFoldDrill } from './drills/openFoldDrill.js';
+import { renderEquitySnapDrill } from './drills/equitySnapDrill.js';
+import { renderRangeCheckDrill } from './drills/rangeCheckDrill.js';
+import { renderPositionDrill } from './drills/positionDrill.js';
 
 // Main content container
 const mainContent = document.getElementById('main-content');
@@ -23,7 +30,7 @@ function renderHomePage() {
   mainContent.innerHTML = `
     <div class="home container">
       <div class="home__hero animate-fade-in-up">
-        <h1 class="home__logo">Hold'em<span class="home__logo-accent">Trainer</span></h1>
+        <h1 class="home__logo">Libre<span class="home__logo-accent">GTO</span></h1>
         <p class="home__tagline">Master GTO poker strategy through interactive lessons and real-time practice</p>
         <div class="home__cta">
           <a href="#/foundations" class="btn btn--primary btn--lg">Start Learning</a>
@@ -34,8 +41,8 @@ function renderHomePage() {
       <div class="home__stages">
         ${renderStageCard(1, 'Foundations', 'Master the fundamentals: hand strength, position, equity, and ranges.', 'foundations', progress)}
         ${renderStageCard(2, 'Drills', 'Practice with rapid-fire exercises to build muscle memory.', 'drills', progress)}
-        ${renderStageCard(3, 'Scenarios', 'Apply your knowledge in realistic multi-street situations.', 'scenarios', progress)}
-        ${renderStageCard(4, 'Full Hands', 'Play complete hands with GTO feedback on every decision.', 'full-hands', progress)}
+        ${renderStageCard(3, 'Scenarios', 'Apply your knowledge in realistic multi-street situations.', 'scenarios', progress, true)}
+        ${renderStageCard(4, 'Full Hands', 'Play complete hands with GTO feedback on every decision.', 'full-hands', progress, true)}
       </div>
 
       <div class="home__progress-summary animate-fade-in-up stagger-3">
@@ -59,24 +66,27 @@ function renderHomePage() {
 /**
  * Render a stage card
  */
-function renderStageCard(number, title, description, stageId, progress) {
-  const unlocked = isStageUnlocked(stageId);
-  const stageProgress = getStageProgress(stageId);
+function renderStageCard(number, title, description, stageId, progress, comingSoon = false) {
+  const unlocked = !comingSoon && isStageUnlocked(stageId);
+  const stageProgress = comingSoon ? 0 : getStageProgress(stageId);
   const completed = stageProgress === 100;
 
   return `
-    <div class="stage-card ${!unlocked ? 'stage-card--locked' : ''} ${completed ? 'stage-card--completed' : ''} animate-fade-in-up stagger-${number}"
+    <div class="stage-card ${!unlocked ? 'stage-card--locked' : ''} ${completed ? 'stage-card--completed' : ''} ${comingSoon ? 'stage-card--coming-soon' : ''} animate-fade-in-up stagger-${number}"
          ${unlocked ? `onclick="window.location.hash='#/${stageId}'"` : ''}>
-      ${!unlocked ? '<span class="stage-card__lock-icon">🔒</span>' : ''}
+      ${comingSoon ? '<span class="stage-card__badge">Coming Soon</span>' : ''}
+      ${!unlocked && !comingSoon ? '<span class="stage-card__lock-icon">🔒</span>' : ''}
       <div class="stage-card__number">${number}</div>
       <div class="stage-card__title">${title}</div>
       <div class="stage-card__description">${description}</div>
+      ${comingSoon ? '' : `
       <div class="stage-card__progress">
         <div class="progress">
           <div class="progress__bar" style="width: ${stageProgress}%"></div>
         </div>
         <div class="text-sm text-secondary mt-2">${stageProgress}% complete</div>
       </div>
+      `}
     </div>
   `;
 }
@@ -196,7 +206,7 @@ function renderSettingsPage() {
       <div class="lesson__section">
         <h3 class="lesson__subtitle">Progress</h3>
         <p class="lesson__text mb-4">Reset your progress to start over from the beginning.</p>
-        <button class="btn btn--secondary" onclick="if(confirm('Are you sure? This will delete all your progress.')) { localStorage.removeItem('holdem-trainer-progress'); location.reload(); }">
+        <button class="btn btn--secondary" onclick="if(confirm('Are you sure? This will delete all your progress.')) { localStorage.removeItem('libregto-progress'); location.reload(); }">
           Reset All Progress
         </button>
       </div>
@@ -206,9 +216,9 @@ function renderSettingsPage() {
       <div class="lesson__section">
         <h3 class="lesson__subtitle">About</h3>
         <p class="lesson__text">
-          Hold'em Trainer is a free educational tool for learning GTO (Game Theory Optimal) poker strategy.
-          The concepts taught here are simplified for learning purposes and represent a starting point
-          for understanding poker fundamentals.
+          LibreGTO is a 100% free, open source GTO poker trainer. Unlike paid alternatives like GTO Wizard
+          or DTO Poker, LibreGTO has no subscription fees and never will. The concepts taught here help you
+          understand GTO (Game Theory Optimal) poker strategy fundamentals.
         </p>
       </div>
     </div>
@@ -227,7 +237,7 @@ function renderAboutPage() {
           <span class="breadcrumb__separator">/</span>
           <span class="breadcrumb__current">How it Works</span>
         </nav>
-        <h1 class="page-header__title">How Hold'em Trainer Works</h1>
+        <h1 class="page-header__title">How LibreGTO Works</h1>
       </div>
 
       <div class="lesson">
@@ -305,13 +315,41 @@ function renderComingSoon(stageName) {
   `;
 }
 
+/**
+ * Render a drill page
+ */
+function renderDrillPage(params) {
+  const drillId = params.id;
+
+  switch (drillId) {
+    case 'hand-ranking':
+      renderHandRankingDrill(mainContent);
+      break;
+    case 'open-fold':
+      renderOpenFoldDrill(mainContent);
+      break;
+    case 'equity-snap':
+      renderEquitySnapDrill(mainContent);
+      break;
+    case 'range-check':
+      renderRangeCheckDrill(mainContent);
+      break;
+    case 'position-speed':
+      renderPositionDrill(mainContent);
+      break;
+    default:
+      render404();
+  }
+}
+
 // Register routes
 router.register('/', renderHomePage);
 router.register('/foundations', renderFoundationsPage);
 router.register('/module/:id', renderModulePage);
+router.register('/drills', () => renderDrillsHub(mainContent));
+router.register('/drill/:id', renderDrillPage);
 router.register('/settings', renderSettingsPage);
 router.register('/about', renderAboutPage);
-router.register('/drills', () => renderComingSoon('Drills'));
 router.register('/scenarios', () => renderComingSoon('Scenarios'));
 router.register('/full-hands', () => renderComingSoon('Full Hands'));
 router.register('*', render404);

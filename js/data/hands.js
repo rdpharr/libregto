@@ -428,3 +428,30 @@ export function getRandomQuizHands(count = 10) {
   // Shuffle and return requested count
   return hands.sort(() => Math.random() - 0.5).slice(0, count);
 }
+
+// Alias for ALL_HANDS (used by drills)
+export const STARTING_HANDS = ALL_HANDS;
+
+// Get hand strength as a value between 0 and 1 (equity / 100)
+export function getHandStrength(notation) {
+  return getEquity(notation) / 100;
+}
+
+// Get a random hand from all 169 starting hands
+export function getRandomHand() {
+  return ALL_HANDS[Math.floor(Math.random() * ALL_HANDS.length)];
+}
+
+// Format hand notation for display (uppercase, clean)
+export function formatHandNotation(notation) {
+  if (!notation) return '';
+  const parsed = parseHand(notation);
+  if (!parsed) return notation;
+
+  if (parsed.pair) {
+    return parsed.rank1 + parsed.rank2;
+  }
+
+  const suffix = parsed.suited ? 's' : 'o';
+  return parsed.rank1 + parsed.rank2 + suffix;
+}

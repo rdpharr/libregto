@@ -342,3 +342,13 @@ export function getPositionDifferenceHands(position1, position2) {
 
   return difference;
 }
+
+// Alias for isInRange (used by drills)
+export function isHandInRange(hand, position) {
+  return isInRange(hand, position);
+}
+
+// Get the opening range Set for a position (used by drills)
+export function getOpeningRangeForPosition(position) {
+  return OPENING_RANGES[position] || new Set();
+}

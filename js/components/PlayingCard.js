@@ -218,6 +218,51 @@ export function parseCardString(cardStr) {
   };
 }
 
+/**
+ * PlayingCard Class
+ * Object-oriented wrapper for creating playing cards
+ */
+export class PlayingCard {
+  constructor(rank, suit, options = {}) {
+    this.rank = rank;
+    this.suit = suit;
+    this.options = options;
+    this.element = null;
+  }
+
+  render(container) {
+    this.element = createPlayingCard({
+      rank: this.rank,
+      suit: this.suit,
+      ...this.options
+    });
+
+    if (typeof container === 'string') {
+      document.querySelector(container).appendChild(this.element);
+    } else if (container) {
+      container.appendChild(this.element);
+    }
+
+    return this.element;
+  }
+
+  getElement() {
+    return this.element;
+  }
+
+  setState(state) {
+    if (this.element) {
+      updateCardState(this.element, state);
+    }
+  }
+
+  flip(newCard) {
+    if (this.element) {
+      flipCard(this.element, newCard);
+    }
+  }
+}
+
 export default {
   createPlayingCard,
   createCardGroup,
@@ -225,5 +270,6 @@ export default {
   updateCardState,
   flipCard,
   getSuitColor,
-  parseCardString
+  parseCardString,
+  PlayingCard
 };

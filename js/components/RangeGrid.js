@@ -351,6 +351,64 @@ export function getRangeStats(range) {
   };
 }
 
+/**
+ * RangeGrid Class
+ * Object-oriented wrapper for creating range grids
+ */
+export class RangeGrid {
+  constructor(options = {}) {
+    this.options = options;
+    this.element = null;
+  }
+
+  render(container) {
+    this.element = createRangeGrid(this.options);
+
+    if (typeof container === 'string') {
+      document.querySelector(container).appendChild(this.element);
+    } else if (container) {
+      container.appendChild(this.element);
+    }
+
+    return this.element;
+  }
+
+  getElement() {
+    return this.element;
+  }
+
+  updateRange(range) {
+    if (this.element) {
+      updateGridRange(this.element, range);
+    }
+  }
+
+  highlight(hand) {
+    if (this.element) {
+      highlightHand(this.element, hand);
+    }
+  }
+
+  getRange() {
+    if (this.element) {
+      return getGridRange(this.element);
+    }
+    return [];
+  }
+
+  clear() {
+    if (this.element) {
+      clearGrid(this.element);
+    }
+  }
+
+  setCellAction(hand, action) {
+    if (this.element) {
+      setCellAction(this.element, hand, action);
+    }
+  }
+}
+
 export default {
   createRangeGrid,
   updateGridRange,
@@ -360,5 +418,6 @@ export default {
   setCellAction,
   createRangeComparison,
   createDifferenceGrid,
-  getRangeStats
+  getRangeStats,
+  RangeGrid
 };
