@@ -204,29 +204,28 @@ function showCountdown(callback) {
  * Generate equity options for a given equity value
  */
 function generateOptions(equity) {
-  // Convert to percentage (0-100)
   const equityPct = equity * 100;
+  const RANGE_WIDTH = 15;
+  const NUM_OPTIONS = 4;
+  const TOTAL_SPAN = RANGE_WIDTH * NUM_OPTIONS; // 60
 
-  // Create ranges of 10% each
-  // Find which 10% bucket the equity falls into
-  const correctBucket = Math.floor(equityPct / 10);
+  // Find the 15% bucket containing the equity
+  const correctLow = Math.floor(equityPct / RANGE_WIDTH) * RANGE_WIDTH;
 
-  // Generate 4 consecutive ranges centered around the correct one
-  let startBucket;
-  if (correctBucket <= 1) {
-    startBucket = 0;
-  } else if (correctBucket >= 8) {
-    startBucket = 6;
-  } else {
-    // Center the options around the correct bucket
-    startBucket = correctBucket - 1;
-  }
+  // Pick a random position (0-3) for the correct answer
+  const targetPosition = Math.floor(Math.random() * NUM_OPTIONS);
 
+  // Calculate start so the correct range lands at targetPosition
+  let start = correctLow - targetPosition * RANGE_WIDTH;
+
+  // Clamp so all ranges stay within 0-100
+  start = Math.max(0, Math.min(start, 100 - TOTAL_SPAN));
+
+  // Build 4 consecutive ascending ranges
   const options = [];
-  for (let i = 0; i < 4; i++) {
-    const bucket = startBucket + i;
-    const low = bucket * 10;
-    const high = (bucket + 1) * 10;
+  for (let i = 0; i < NUM_OPTIONS; i++) {
+    const low = start + i * RANGE_WIDTH;
+    const high = low + RANGE_WIDTH;
     options.push({
       label: `${low}-${high}%`,
       low,
@@ -234,11 +233,11 @@ function generateOptions(equity) {
     });
   }
 
-  // Find which option is correct
+  // Find which option contains the equity
   correctOption = options.findIndex(opt => equityPct >= opt.low && equityPct < opt.high);
   if (correctOption === -1) {
-    // Edge case: exactly 100%
-    correctOption = 3;
+    // Edge case: equity exactly at upper boundary
+    correctOption = NUM_OPTIONS - 1;
   }
 
   return options;
