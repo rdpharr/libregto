@@ -371,7 +371,7 @@ function startQuiz(container) {
             Found a problem? <a href="https://github.com/rdpharr/libregto/issues" target="_blank" rel="noopener" class="link">Report it on GitHub</a>
           </p>
           <p class="text-sm text-tertiary">
-            Did this help? <a href="https://buymeacoffee.com/rdpharr" target="_blank" rel="noopener" class="link link--coffee">Buy me a coffee ☕</a>
+            Did this improve your skills? <a href="https://buymeacoffee.com/rdpharr" target="_blank" rel="noopener" class="link link--coffee">Buy me a coffee ☕</a>
           </p>
         </div>
       </div>

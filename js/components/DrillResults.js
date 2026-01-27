@@ -239,7 +239,7 @@ export class DrillResults {
           Found a problem? <a href="https://github.com/rdpharr/libregto/issues" target="_blank" rel="noopener" class="drill-results__feedback-link">Report it on GitHub</a>
         </p>
         <p class="drill-results__feedback-text">
-          Did this help you learn? <a href="https://buymeacoffee.com/rdpharr" target="_blank" rel="noopener" class="drill-results__feedback-link drill-results__feedback-link--coffee">Buy me a coffee ☕</a>
+          Did this improve your skills? <a href="https://buymeacoffee.com/rdpharr" target="_blank" rel="noopener" class="drill-results__feedback-link drill-results__feedback-link--coffee">Buy me a coffee ☕</a>
         </p>
       </div>
     `;
