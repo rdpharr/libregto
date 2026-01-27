@@ -277,8 +277,8 @@ function renderHandCards(containerId, handNotation) {
 
   const suits = parsed.suited ? ['s', 's'] : ['s', 'h'];
 
-  const card1 = new PlayingCard(parsed.ranks[0], suits[0], { size: 'lg' });
-  const card2 = new PlayingCard(parsed.ranks[1], suits[1], { size: 'lg' });
+  const card1 = new PlayingCard(parsed.rank1, suits[0], { size: 'lg' });
+  const card2 = new PlayingCard(parsed.rank2, suits[1], { size: 'lg' });
 
   card1.render(container);
   card2.render(container);

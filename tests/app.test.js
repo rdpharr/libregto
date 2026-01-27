@@ -124,6 +124,47 @@ test.describe('Stage 2: Drills', () => {
       console.log('Hand ranking drill errors:', errors);
     }
   });
+
+  test('hand ranking drill renders cards after starting', async ({ page }) => {
+    const errors = [];
+    page.on('pageerror', err => {
+      errors.push(err.message);
+    });
+
+    await page.goto(BASE_URL + '/#/drill/hand-ranking');
+    await page.waitForTimeout(500);
+
+    // Click Start Drill button
+    const startBtn = page.locator('#start-drill-btn');
+    await expect(startBtn).toBeVisible();
+    await startBtn.click();
+
+    // Wait for countdown (3-2-1-GO = ~3.2s) + first question render
+    await page.waitForTimeout(4500);
+
+    // Log any JS errors
+    if (errors.length > 0) {
+      console.log('Card rendering errors:', errors);
+    }
+
+    // Cards should be visible in both left and right containers
+    const leftCards = page.locator('#left-cards .playing-card');
+    const rightCards = page.locator('#right-cards .playing-card');
+
+    const leftCount = await leftCards.count();
+    const rightCount = await rightCards.count();
+    console.log(`Left cards: ${leftCount}, Right cards: ${rightCount}`);
+
+    // Take screenshot for visual verification
+    await page.screenshot({ path: 'tests/hand-ranking-cards.png', fullPage: true });
+
+    // Assert no JS errors occurred
+    expect(errors).toHaveLength(0);
+
+    // Assert cards rendered (2 cards per side)
+    await expect(leftCards).toHaveCount(2);
+    await expect(rightCards).toHaveCount(2);
+  });
 });
 
 test.describe('Debug: Find all errors', () => {
