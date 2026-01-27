@@ -7,6 +7,7 @@ import { Timer } from '../components/Timer.js';
 import { StreakCounter } from '../components/StreakCounter.js';
 import { DrillResults } from '../components/DrillResults.js';
 import { updateDrillProgress, getDrillProgress, getDrillThreshold, isDrillUnlocked } from '../storage.js';
+import { renderPositionTableMini } from '../components/PositionTableMini.js';
 
 const DRILL_ID = 'position-speed';
 const TOTAL_QUESTIONS = 15;
@@ -158,6 +159,8 @@ function startDrill() {
       <div class="drill-question" id="drill-question">
         <div class="drill-question__prompt" id="question-prompt"></div>
 
+        <div id="position-table-mini"></div>
+
         <div class="position-options" id="position-options"></div>
       </div>
 
@@ -305,6 +308,9 @@ function showNextQuestion() {
 
   // Display question
   document.getElementById('question-prompt').textContent = q.question;
+
+  // Update mini table highlighting both positions
+  document.getElementById('position-table-mini').innerHTML = renderPositionTableMini(q.options);
 
   // Display options
   const optionsContainer = document.getElementById('position-options');

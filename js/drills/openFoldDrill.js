@@ -10,6 +10,7 @@ import { DrillResults } from '../components/DrillResults.js';
 import { getRandomHand, parseHand, formatHandNotation } from '../data/hands.js';
 import { isHandInRange, POSITIONS, getOpeningRangeForPosition } from '../data/ranges.js';
 import { updateDrillProgress, getDrillProgress, getDrillThreshold, isDrillUnlocked } from '../storage.js';
+import { renderPositionTableMini, updatePositionTableMini } from '../components/PositionTableMini.js';
 
 const DRILL_ID = 'open-fold';
 const TOTAL_QUESTIONS = 25;
@@ -141,7 +142,10 @@ function startDrill() {
       <div id="streak-container"></div>
 
       <div class="drill-question" id="drill-question">
-        <div class="drill-question__position" id="position-display"></div>
+        <div class="drill-position-ref">
+          <div class="drill-question__position" id="position-display"></div>
+          <div id="position-table-mini"></div>
+        </div>
         <div class="drill-question__prompt">Should you open?</div>
 
         <div class="drill-hand-display" id="hand-display"></div>
@@ -232,6 +236,9 @@ function showNextQuestion() {
   const positionDisplay = document.getElementById('position-display');
   positionDisplay.textContent = currentPosition;
   positionDisplay.className = 'drill-question__position drill-question__position--' + currentPosition.toLowerCase();
+
+  // Update mini table
+  document.getElementById('position-table-mini').innerHTML = renderPositionTableMini(currentPosition);
 
   // Render hand
   renderHand('hand-display', currentHand);

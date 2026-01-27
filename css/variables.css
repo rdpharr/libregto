@@ -44,8 +44,8 @@
   --color-info-soft: rgba(59, 130, 246, 0.15);
 
   /* Card Suit Colors */
-  --color-suit-hearts: #ef4444;
-  --color-suit-diamonds: #ef4444;
+  --color-suit-hearts: #dc2626;
+  --color-suit-diamonds: #dc2626;
   --color-suit-clubs: #fafaf9;
   --color-suit-spades: #fafaf9;
 
@@ -56,6 +56,30 @@
   --color-range-raise: #ea580c;
   --color-range-highlight: rgba(234, 88, 12, 0.4);
   --color-range-hover: rgba(255, 255, 255, 0.08);
+
+  /* Poker Table Colors */
+  --color-felt-light: #1a5c3a;
+  --color-felt-dark: #0d3d26;
+  --color-table-rail: #5c4033;
+
+  /* Position Colors */
+  --color-pos-utg: #7c3aed;
+  --color-pos-utg-dark: #6d28d9;
+  --color-pos-mp: #3b82f6;
+  --color-pos-mp-dark: #2563eb;
+  --color-pos-co: #14b8a6;
+  --color-pos-co-dark: #0d9488;
+  --color-pos-btn: #22c55e;
+  --color-pos-btn-dark: #16a34a;
+  --color-pos-sb: #f59e0b;
+  --color-pos-sb-dark: #d97706;
+  --color-pos-bb: #ef4444;
+  --color-pos-bb-dark: #dc2626;
+
+  /* Misc UI Colors */
+  --color-neutral-500: #6b7280;
+  --color-neutral-600: #4b5563;
+  --color-star: #fbbf24;
 
   /* ========== Typography ========== */
 

@@ -92,38 +92,6 @@
   letter-spacing: var(--tracking-wider);
 }
 
-/* ========== Timer ========== */
-.timer {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: var(--space-2);
-}
-
-.timer__value {
-  font-family: var(--font-mono);
-  font-size: var(--text-3xl);
-  font-weight: var(--font-bold);
-  color: var(--color-text-primary);
-  min-width: 80px;
-  text-align: center;
-}
-
-.timer--warning .timer__value {
-  color: var(--color-drill-slow);
-  animation: timerPulse 0.5s ease-in-out infinite;
-}
-
-.timer--danger .timer__value {
-  color: var(--color-drill-wrong);
-  animation: timerPulse 0.3s ease-in-out infinite;
-}
-
-@keyframes timerPulse {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.6; }
-}
-
 /* ========== Streak Counter ========== */
 .streak {
   display: flex;
@@ -308,7 +276,7 @@
 }
 
 .drill__btn--no {
-  background: linear-gradient(135deg, #6b7280 0%, #4b5563 100%);
+  background: linear-gradient(135deg, var(--color-neutral-500) 0%, var(--color-neutral-600) 100%);
   color: white;
 }
 
@@ -418,15 +386,6 @@
 }
 
 /* ========== Drill Results ========== */
-.drill-results {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: var(--space-8);
-  padding: var(--space-8);
-  text-align: center;
-}
-
 .drill-results__icon {
   font-size: 80px;
   animation: pop 0.5s cubic-bezier(0.68, -0.55, 0.265, 1.55);
@@ -841,6 +800,11 @@
   color: var(--color-drill-fast);
 }
 
+@keyframes timerPulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.6; }
+}
+
 /* ========== Streak Counter Component ========== */
 .streak-counter {
   display: flex;
@@ -963,12 +927,12 @@
   color: white;
 }
 
-.drill-question__position--utg { background: linear-gradient(135deg, #7c3aed 0%, #6d28d9 100%); }
-.drill-question__position--mp { background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%); }
-.drill-question__position--co { background: linear-gradient(135deg, #14b8a6 0%, #0d9488 100%); }
-.drill-question__position--btn { background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%); }
-.drill-question__position--sb { background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%); }
-.drill-question__position--bb { background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%); }
+.drill-question__position--utg { background: linear-gradient(135deg, var(--color-pos-utg) 0%, var(--color-pos-utg-dark) 100%); }
+.drill-question__position--mp { background: linear-gradient(135deg, var(--color-pos-mp) 0%, var(--color-pos-mp-dark) 100%); }
+.drill-question__position--co { background: linear-gradient(135deg, var(--color-pos-co) 0%, var(--color-pos-co-dark) 100%); }
+.drill-question__position--btn { background: linear-gradient(135deg, var(--color-pos-btn) 0%, var(--color-pos-btn-dark) 100%); }
+.drill-question__position--sb { background: linear-gradient(135deg, var(--color-pos-sb) 0%, var(--color-pos-sb-dark) 100%); }
+.drill-question__position--bb { background: linear-gradient(135deg, var(--color-pos-bb) 0%, var(--color-pos-bb-dark) 100%); }
 
 /* ========== Hand Display ========== */
 .drill-hand-display {
@@ -1282,6 +1246,8 @@
 .range-preview__grid {
   display: flex;
   justify-content: center;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
 }
 
 /* ========== Drills Hub Additional Styles ========== */
@@ -1406,6 +1372,12 @@
 
 /* ========== Drill Results Component ========== */
 .drill-results {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-8);
+  padding: var(--space-8);
+  text-align: center;
   opacity: 0;
   transform: translateY(20px);
   transition: all 0.3s ease;
@@ -1461,7 +1433,7 @@
 }
 
 .drill-results__star--filled {
-  color: #fbbf24;
+  color: var(--color-star);
   animation: starPop 0.3s ease-out;
   animation-delay: calc(var(--i, 0) * 0.1s);
 }
@@ -1690,6 +1662,76 @@
   color: var(--color-drill-correct);
 }
 
+/* ========== Mini Position Table (Drill Reference) ========== */
+.mini-table {
+  width: 140px;
+  flex-shrink: 0;
+  padding: 14px;
+}
+
+.mini-table__felt {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 1.6;
+  background: linear-gradient(135deg, var(--color-felt-light) 0%, var(--color-felt-dark) 100%);
+  border-radius: 50%;
+  border: 4px solid var(--color-table-rail);
+  box-shadow:
+    inset 0 0 12px rgba(0, 0, 0, 0.3),
+    0 2px 8px rgba(0, 0, 0, 0.25);
+  overflow: visible;
+}
+
+.mini-table__seat {
+  position: absolute;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  border-radius: var(--radius-full);
+  background-color: var(--color-surface-raised);
+  border: 2px solid var(--color-surface-border);
+  font-family: var(--font-mono);
+  font-size: 9px;
+  font-weight: var(--font-bold);
+  letter-spacing: 0.02em;
+  color: var(--color-text-tertiary);
+  transform: translate(-50%, -50%);
+  transition: all 0.25s ease;
+  line-height: 1;
+}
+
+/* Seat positions around the oval — mirror the full poker-table layout */
+.mini-table__seat-pos--utg { top: 10%; left: 25%; }
+.mini-table__seat-pos--mp  { top: 10%; left: 55%; }
+.mini-table__seat-pos--co  { top: 10%; left: 85%; }
+.mini-table__seat-pos--btn { top: 90%; left: 80%; }
+.mini-table__seat-pos--sb  { top: 90%; left: 25%; }
+.mini-table__seat-pos--bb  { top: 50%; left: 4%;  }
+
+/* Active seat highlight — glow matches position color */
+.mini-table__seat--active {
+  color: white;
+  border-color: transparent;
+  transform: translate(-50%, -50%) scale(1.2);
+  z-index: 1;
+}
+
+.mini-table__seat--utg { background: linear-gradient(135deg, var(--color-pos-utg), var(--color-pos-utg-dark)); box-shadow: 0 0 8px rgba(124, 58, 237, 0.5); }
+.mini-table__seat--mp  { background: linear-gradient(135deg, var(--color-pos-mp), var(--color-pos-mp-dark)); box-shadow: 0 0 8px rgba(59, 130, 246, 0.5); }
+.mini-table__seat--co  { background: linear-gradient(135deg, var(--color-pos-co), var(--color-pos-co-dark)); box-shadow: 0 0 8px rgba(20, 184, 166, 0.5); }
+.mini-table__seat--btn { background: linear-gradient(135deg, var(--color-pos-btn), var(--color-pos-btn-dark)); box-shadow: 0 0 8px rgba(34, 197, 94, 0.5); }
+.mini-table__seat--sb  { background: linear-gradient(135deg, var(--color-pos-sb), var(--color-pos-sb-dark)); box-shadow: 0 0 8px rgba(245, 158, 11, 0.5); }
+.mini-table__seat--bb  { background: linear-gradient(135deg, var(--color-pos-bb), var(--color-pos-bb-dark)); box-shadow: 0 0 8px rgba(239, 68, 68, 0.5); }
+
+/* Position + table layout wrapper */
+.drill-position-ref {
+  display: flex;
+  align-items: center;
+  gap: var(--space-5);
+}
+
 /* ========== Mobile Optimizations for New Elements ========== */
 @media (max-width: 768px) {
   .hand-comparison {
@@ -1727,5 +1769,158 @@
   .drills-hub__stats {
     flex-direction: column;
     gap: var(--space-4);
+  }
+
+  .mini-table {
+    width: 120px;
+    padding: 12px;
+  }
+
+  .mini-table__seat {
+    width: 26px;
+    height: 26px;
+    font-size: 8px;
+  }
+
+  .drill-position-ref {
+    gap: var(--space-3);
+  }
+
+  .drill-question__position {
+    font-size: var(--text-2xl);
+    padding: var(--space-3) var(--space-6);
+  }
+}
+
+/* ========== Focus Visible States ========== */
+.drill__hand:focus-visible,
+.drill__btn:focus-visible,
+.drill__choice:focus-visible,
+.drill-actions__btn:focus-visible,
+.equity-options__btn:focus-visible,
+.position-options__btn:focus-visible,
+.hand-comparison__choice:focus-visible {
+  outline: 2px solid var(--color-primary-400);
+  outline-offset: 2px;
+}
+
+/* ========== Small Phone Breakpoint ========== */
+@media (max-width: 480px) {
+  .drill__btn {
+    min-height: 60px;
+    font-size: var(--text-lg);
+    padding: var(--space-4);
+  }
+
+  .drill-actions__btn {
+    font-size: var(--text-lg);
+    padding: var(--space-4);
+  }
+
+  .hand-comparison__choice {
+    min-width: 120px;
+    padding: var(--space-4);
+  }
+
+  .hand-comparison__vs {
+    font-size: var(--text-xl);
+  }
+
+  .countdown__number,
+  .drill-countdown__number {
+    font-size: 80px;
+  }
+
+  .countdown__go {
+    font-size: 56px;
+  }
+
+  .drill-results__score {
+    font-size: 44px;
+  }
+
+  .drill-results__grade {
+    font-size: var(--text-4xl);
+  }
+
+  .drill-start__content {
+    padding: var(--space-5);
+  }
+
+  .drill-start__icon {
+    font-size: 48px;
+  }
+
+  .mini-table {
+    width: 100px;
+    padding: 10px;
+  }
+
+  .mini-table__seat {
+    width: 22px;
+    height: 22px;
+    font-size: 7px;
+  }
+}
+
+/* ========== Reduced Motion ========== */
+@media (prefers-reduced-motion: reduce) {
+  .drill__hand,
+  .drill__btn,
+  .drill__choice,
+  .drill-actions__btn,
+  .equity-options__btn,
+  .position-options__btn,
+  .hand-comparison__choice,
+  .mini-table__seat,
+  .streak__icon,
+  .streak__value,
+  .streak-counter__value,
+  .drill-results,
+  .drill-results__star--filled,
+  .drill-results__icon,
+  .playing-card--dealing,
+  .playing-card--revealing {
+    animation: none !important;
+    transition: none !important;
+  }
+
+  .timer--warning .timer__value,
+  .timer--danger .timer__value,
+  .timer--critical .timer__time {
+    animation: none !important;
+  }
+
+  .streak__icon--fire {
+    animation: none !important;
+  }
+
+  .feedback-flash--correct,
+  .feedback-flash--wrong {
+    animation: none !important;
+  }
+
+  .drill__hand--correct,
+  .drill__hand--wrong,
+  .drill__btn--correct,
+  .drill__btn--wrong,
+  .drill-actions__btn--correct,
+  .drill-actions__btn--wrong,
+  .hand-comparison__choice--wrong {
+    animation: none !important;
+  }
+
+  .countdown__number,
+  .countdown__go,
+  .drill-countdown__number--pulse {
+    animation: none !important;
+  }
+
+  .streak-counter__milestone-popup--visible {
+    animation: none !important;
+  }
+
+  .streak-counter--breaking {
+    animation: none !important;
   }
 }

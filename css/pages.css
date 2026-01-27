@@ -428,6 +428,8 @@
 .range-builder__grid-container {
   display: flex;
   justify-content: center;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
 }
 
 .range-builder__comparison {
@@ -498,7 +500,7 @@
 
 /* Fade in up animation */
 .animate-fade-in-up {
-  animation: fadeInUp var(--transition-slow) ease-out forwards;
+  animation: fadeInUp var(--transition-slow) ease-out both;
 }
 
 @keyframes fadeInUp {
