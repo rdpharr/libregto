@@ -59,6 +59,11 @@ function renderHomePage() {
           <div class="home__stat-label">Best Streak</div>
         </div>
       </div>
+
+      <p class="home__open-source animate-fade-in-up stagger-4">
+        Free and open source. No tracking, no ads, no accounts.
+        <a href="https://github.com/rdpharr/libregto" target="_blank" rel="noopener noreferrer">View on GitHub</a>
+      </p>
     </div>
   `;
 }

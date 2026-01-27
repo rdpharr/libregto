@@ -138,6 +138,22 @@
   margin-top: var(--space-1);
 }
 
+.home__open-source {
+  text-align: center;
+  font-size: var(--text-sm);
+  color: var(--color-text-secondary);
+}
+
+.home__open-source a {
+  color: var(--color-primary-400);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.home__open-source a:hover {
+  color: var(--color-primary-300);
+}
+
 /* ========== Foundations Hub ========== */
 
 .foundations {
