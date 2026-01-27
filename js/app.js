@@ -220,6 +220,11 @@ function renderSettingsPage() {
           or DTO Poker, LibreGTO has no subscription fees and never will. The concepts taught here help you
           understand GTO (Game Theory Optimal) poker strategy fundamentals.
         </p>
+        <p class="lesson__text mt-4">
+          <a href="https://github.com/rdpharr/libregto/issues" target="_blank" rel="noopener" class="link">Report an Issue</a>
+          &nbsp;&middot;&nbsp;
+          <a href="https://buymeacoffee.com/rdpharr" target="_blank" rel="noopener" class="link link--coffee">Buy me a coffee ☕</a>
+        </p>
       </div>
     </div>
   `;
