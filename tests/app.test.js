@@ -155,15 +155,146 @@ test.describe('Stage 2: Drills', () => {
     const rightCount = await rightCards.count();
     console.log(`Left cards: ${leftCount}, Right cards: ${rightCount}`);
 
-    // Take screenshot for visual verification
-    await page.screenshot({ path: 'tests/hand-ranking-cards.png', fullPage: true });
-
     // Assert no JS errors occurred
     expect(errors).toHaveLength(0);
 
     // Assert cards rendered (2 cards per side)
     await expect(leftCards).toHaveCount(2);
     await expect(rightCards).toHaveCount(2);
+  });
+
+  test('open-fold drill renders cards after starting', async ({ page }) => {
+    const errors = [];
+    page.on('pageerror', err => {
+      errors.push(err.message);
+    });
+
+    await page.goto(BASE_URL);
+    await page.evaluate((drillId) => {
+      localStorage.setItem('libregto-progress', JSON.stringify({
+        version: 1,
+        stages: { drills: { unlocked: true, modules: { [drillId]: { unlocked: true } } } }
+      }));
+    }, 'open-fold');
+
+    await page.goto(BASE_URL + '/#/drill/open-fold');
+    await page.waitForTimeout(500);
+
+    const startBtn = page.locator('#start-drill-btn');
+    await expect(startBtn).toBeVisible();
+    await startBtn.click();
+
+    await page.waitForTimeout(4500);
+
+    if (errors.length > 0) {
+      console.log('Open-fold drill errors:', errors);
+    }
+
+    expect(errors).toHaveLength(0);
+
+    const cards = page.locator('#hand-display .playing-card');
+    await expect(cards).toHaveCount(2);
+  });
+
+  test('equity-snap drill renders cards after starting', async ({ page }) => {
+    const errors = [];
+    page.on('pageerror', err => {
+      errors.push(err.message);
+    });
+
+    await page.goto(BASE_URL);
+    await page.evaluate((drillId) => {
+      localStorage.setItem('libregto-progress', JSON.stringify({
+        version: 1,
+        stages: { drills: { unlocked: true, modules: { [drillId]: { unlocked: true } } } }
+      }));
+    }, 'equity-snap');
+
+    await page.goto(BASE_URL + '/#/drill/equity-snap');
+    await page.waitForTimeout(500);
+
+    const startBtn = page.locator('#start-drill-btn');
+    await expect(startBtn).toBeVisible();
+    await startBtn.click();
+
+    await page.waitForTimeout(4500);
+
+    if (errors.length > 0) {
+      console.log('Equity-snap drill errors:', errors);
+    }
+
+    expect(errors).toHaveLength(0);
+
+    const cards = page.locator('#hand-display .playing-card');
+    await expect(cards).toHaveCount(2);
+  });
+
+  test('range-check drill renders cards after starting', async ({ page }) => {
+    const errors = [];
+    page.on('pageerror', err => {
+      errors.push(err.message);
+    });
+
+    await page.goto(BASE_URL);
+    await page.evaluate((drillId) => {
+      localStorage.setItem('libregto-progress', JSON.stringify({
+        version: 1,
+        stages: { drills: { unlocked: true, modules: { [drillId]: { unlocked: true } } } }
+      }));
+    }, 'range-check');
+
+    await page.goto(BASE_URL + '/#/drill/range-check');
+    await page.waitForTimeout(500);
+
+    const startBtn = page.locator('#start-drill-btn');
+    await expect(startBtn).toBeVisible();
+    await startBtn.click();
+
+    await page.waitForTimeout(4500);
+
+    if (errors.length > 0) {
+      console.log('Range-check drill errors:', errors);
+    }
+
+    expect(errors).toHaveLength(0);
+
+    const cards = page.locator('#hand-display .playing-card');
+    await expect(cards).toHaveCount(2);
+  });
+
+  test('position-speed drill loads and starts without errors', async ({ page }) => {
+    const errors = [];
+    page.on('pageerror', err => {
+      errors.push(err.message);
+    });
+
+    await page.goto(BASE_URL);
+    await page.evaluate((drillId) => {
+      localStorage.setItem('libregto-progress', JSON.stringify({
+        version: 1,
+        stages: { drills: { unlocked: true, modules: { [drillId]: { unlocked: true } } } }
+      }));
+    }, 'position-speed');
+
+    await page.goto(BASE_URL + '/#/drill/position-speed');
+    await page.waitForTimeout(500);
+
+    const startBtn = page.locator('#start-drill-btn');
+    await expect(startBtn).toBeVisible();
+    await startBtn.click();
+
+    await page.waitForTimeout(4500);
+
+    if (errors.length > 0) {
+      console.log('Position-speed drill errors:', errors);
+    }
+
+    expect(errors).toHaveLength(0);
+
+    // Position drill shows position option buttons instead of cards
+    const optionBtns = page.locator('.position-options__btn');
+    const count = await optionBtns.count();
+    expect(count).toBeGreaterThanOrEqual(2);
   });
 });
 
