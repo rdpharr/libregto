@@ -49,7 +49,7 @@ function renderHomePage() {
       <div class="home__stages">
         ${renderStageCard(1, 'Foundations', 'Master the fundamentals: hand strength, position, equity, and ranges.', 'foundations', progress)}
         ${renderStageCard(2, 'Drills', 'Practice with rapid-fire exercises to build muscle memory.', 'drills', progress)}
-        ${renderStageCard(3, 'Scenarios', 'Apply your knowledge in realistic multi-street situations.', 'scenarios', progress, true)}
+        ${renderStageCard(3, 'Scenarios', 'Apply your knowledge in realistic multi-street situations.', 'scenarios', progress)}
         ${renderStageCard(4, 'Full Hands', 'Play complete hands with GTO feedback on every decision.', 'full-hands', progress, true)}
       </div>
 
