@@ -103,7 +103,54 @@ const DEFAULT_PROGRESS = {
     scenarios: {
       unlocked: false,
       completed: false,
-      modules: {}
+      modules: {
+        // Tier 1: High Consensus (unlocked immediately when Stage 3 unlocks)
+        'defend-3bet': {
+          unlocked: true,
+          completed: false,
+          bestScore: 0,
+          attempts: 0,
+          lastAttempt: null
+        },
+        'bb-defense': {
+          unlocked: true,
+          completed: false,
+          bestScore: 0,
+          attempts: 0,
+          lastAttempt: null
+        },
+        '3bet-value': {
+          unlocked: true,
+          completed: false,
+          bestScore: 0,
+          attempts: 0,
+          lastAttempt: null
+        },
+        'sb-3bet-fold': {
+          unlocked: true,
+          completed: false,
+          bestScore: 0,
+          attempts: 0,
+          lastAttempt: null
+        },
+        // Tier 2: Simplified (requires 2 Tier 1 at 75%+)
+        'cold-4bet': {
+          unlocked: false,
+          completed: false,
+          bestScore: 0,
+          attempts: 0,
+          lastAttempt: null
+        },
+        // Tier 3: Heuristic (always available - educational)
+        'board-texture': {
+          unlocked: true,
+          completed: false,
+          bestScore: 0,
+          attempts: 0,
+          lastAttempt: null
+        }
+      },
+      achievements: []
     },
     'full-hands': {
       unlocked: false,
@@ -139,6 +186,25 @@ const DRILL_THRESHOLDS = {
   'range-check': 75,
   'position-speed': 80
 };
+
+// Scenario order for unlocking
+const SCENARIO_ORDER = [
+  'defend-3bet', 'bb-defense', '3bet-value', 'sb-3bet-fold',
+  'cold-4bet', 'board-texture'
+];
+
+// Scenario pass thresholds
+const SCENARIO_THRESHOLDS = {
+  'defend-3bet': 75,
+  'bb-defense': 75,
+  '3bet-value': 75,
+  'sb-3bet-fold': 75,
+  'cold-4bet': 70,
+  'board-texture': 80  // Higher threshold for conceptual quiz
+};
+
+// Tier 1 scenarios (available when Stage 3 unlocks)
+const TIER_1_SCENARIOS = ['defend-3bet', 'bb-defense', '3bet-value', 'sb-3bet-fold'];
 
 /**
  * Load progress from localStorage
@@ -656,4 +722,243 @@ export function getDrillStats() {
  */
 export function getDrillOrder() {
   return [...DRILL_ORDER];
+}
+
+// ============================================
+// SCENARIO-SPECIFIC FUNCTIONS
+// ============================================
+
+/**
+ * Get scenario progress
+ */
+export function getScenarioProgress(scenarioId) {
+  const progress = loadProgress();
+  return progress.stages.scenarios?.modules[scenarioId] || null;
+}
+
+/**
+ * Get all scenarios progress
+ */
+export function getAllScenariosProgress() {
+  const progress = loadProgress();
+  return progress.stages.scenarios?.modules || {};
+}
+
+/**
+ * Update scenario progress after completion
+ */
+export function updateScenarioProgress(scenarioId, stats) {
+  const progress = loadProgress();
+  const scenarioData = progress.stages.scenarios;
+
+  if (!scenarioData?.modules[scenarioId]) {
+    console.error(`Scenario ${scenarioId} not found`);
+    return false;
+  }
+
+  const scenario = scenarioData.modules[scenarioId];
+  const threshold = SCENARIO_THRESHOLDS[scenarioId] || 75;
+  const passed = stats.accuracy >= threshold;
+
+  // Update attempt count
+  scenario.attempts += 1;
+  scenario.lastAttempt = new Date().toISOString();
+
+  // Update best score if higher
+  if (stats.accuracy > scenario.bestScore) {
+    scenario.bestScore = stats.accuracy;
+  }
+
+  // Mark as completed if passed
+  if (passed && !scenario.completed) {
+    scenario.completed = true;
+
+    // Check if cold-4bet should unlock (requires 2 Tier 1 at 75%+)
+    const tier1Completed = TIER_1_SCENARIOS.filter(
+      id => scenarioData.modules[id]?.bestScore >= 75
+    ).length;
+    if (tier1Completed >= 2 && scenarioData.modules['cold-4bet']) {
+      scenarioData.modules['cold-4bet'].unlocked = true;
+    }
+
+    // Check if all scenarios completed
+    const allCompleted = SCENARIO_ORDER.every(
+      id => scenarioData.modules[id]?.completed
+    );
+    if (allCompleted) {
+      scenarioData.completed = true;
+      // Unlock full-hands stage
+      if (progress.stages['full-hands']) {
+        progress.stages['full-hands'].unlocked = true;
+      }
+    }
+
+    // Check for achievements
+    checkScenarioAchievements(progress, scenarioId, stats);
+  }
+
+  return saveProgress(progress);
+}
+
+/**
+ * Check and award scenario achievements
+ */
+function checkScenarioAchievements(progress, scenarioId, stats) {
+  const achievements = progress.stages.scenarios.achievements || [];
+
+  // Perfect Decisions - 100% on any scenario
+  if (stats.accuracy === 100 && !achievements.includes('perfect-decisions')) {
+    achievements.push('perfect-decisions');
+  }
+
+  // Scenario Solver - complete all scenarios
+  const allCompleted = SCENARIO_ORDER.every(
+    id => progress.stages.scenarios.modules[id]?.completed
+  );
+  if (allCompleted && !achievements.includes('scenario-solver')) {
+    achievements.push('scenario-solver');
+  }
+
+  // Preflop Master - complete all 5 preflop scenarios
+  const preflopScenarios = ['defend-3bet', 'bb-defense', '3bet-value', 'sb-3bet-fold', 'cold-4bet'];
+  const preflopCompleted = preflopScenarios.every(
+    id => progress.stages.scenarios.modules[id]?.completed
+  );
+  if (preflopCompleted && !achievements.includes('preflop-master')) {
+    achievements.push('preflop-master');
+  }
+
+  // 3-Bet Specialist - master both 3-bet scenarios
+  const threeBetScenarios = ['3bet-value', 'sb-3bet-fold'];
+  const threeBetMastered = threeBetScenarios.every(
+    id => progress.stages.scenarios.modules[id]?.bestScore >= 85
+  );
+  if (threeBetMastered && !achievements.includes('3bet-specialist')) {
+    achievements.push('3bet-specialist');
+  }
+
+  // Defender - master defense scenarios
+  const defenseScenarios = ['defend-3bet', 'bb-defense'];
+  const defenseMastered = defenseScenarios.every(
+    id => progress.stages.scenarios.modules[id]?.bestScore >= 85
+  );
+  if (defenseMastered && !achievements.includes('defender')) {
+    achievements.push('defender');
+  }
+
+  progress.stages.scenarios.achievements = achievements;
+}
+
+/**
+ * Check if a scenario is unlocked
+ */
+export function isScenarioUnlocked(scenarioId) {
+  const progress = loadProgress();
+
+  // First check if scenarios stage is unlocked
+  if (!progress.stages.scenarios?.unlocked) {
+    return false;
+  }
+
+  return progress.stages.scenarios?.modules[scenarioId]?.unlocked || false;
+}
+
+/**
+ * Check if a scenario is completed
+ */
+export function isScenarioCompleted(scenarioId) {
+  const progress = loadProgress();
+  return progress.stages.scenarios?.modules[scenarioId]?.completed || false;
+}
+
+/**
+ * Get scenario pass threshold
+ */
+export function getScenarioThreshold(scenarioId) {
+  return SCENARIO_THRESHOLDS[scenarioId] || 75;
+}
+
+/**
+ * Get the next scenario to work on
+ */
+export function getCurrentScenario() {
+  const progress = loadProgress();
+  const scenarioData = progress.stages.scenarios;
+
+  if (!scenarioData?.modules) return null;
+
+  // Find first incomplete but unlocked scenario
+  for (const scenarioId of SCENARIO_ORDER) {
+    const scenario = scenarioData.modules[scenarioId];
+    if (scenario && scenario.unlocked && !scenario.completed) {
+      return scenarioId;
+    }
+  }
+
+  // All complete or none available, return first unlocked
+  for (const scenarioId of SCENARIO_ORDER) {
+    const scenario = scenarioData.modules[scenarioId];
+    if (scenario && scenario.unlocked) {
+      return scenarioId;
+    }
+  }
+
+  return SCENARIO_ORDER[0];
+}
+
+/**
+ * Get scenario achievements
+ */
+export function getScenarioAchievements() {
+  const progress = loadProgress();
+  return progress.stages.scenarios?.achievements || [];
+}
+
+/**
+ * Get scenario stats summary
+ */
+export function getScenarioStats() {
+  const progress = loadProgress();
+  const scenarioData = progress.stages.scenarios;
+
+  const completed = SCENARIO_ORDER.filter(
+    id => scenarioData.modules[id]?.completed
+  ).length;
+
+  const totalAttempts = SCENARIO_ORDER.reduce(
+    (sum, id) => sum + (scenarioData.modules[id]?.attempts || 0), 0
+  );
+
+  return {
+    completed,
+    total: SCENARIO_ORDER.length,
+    totalAttempts,
+    achievements: scenarioData.achievements?.length || 0
+  };
+}
+
+/**
+ * Get scenario order
+ */
+export function getScenarioOrder() {
+  return [...SCENARIO_ORDER];
+}
+
+/**
+ * Check if scenarios stage should be unlocked
+ * (Requires 3+ drills at 80%+ OR at least 3 drills completed)
+ */
+export function checkScenariosUnlock() {
+  const progress = loadProgress();
+  const drillData = progress.stages.drills;
+
+  if (!drillData?.modules) return false;
+
+  // Count drills at 80%+ or completed
+  const qualifyingDrills = DRILL_ORDER.filter(id => {
+    const drill = drillData.modules[id];
+    return drill && (drill.bestScore >= 80 || drill.completed);
+  }).length;
+
+  return qualifyingDrills >= 3;
 }

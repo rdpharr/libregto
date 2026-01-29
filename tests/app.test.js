@@ -298,6 +298,319 @@ test.describe('Stage 2: Drills', () => {
   });
 });
 
+test.describe('Stage 3: Scenarios', () => {
+  test('scenarios hub page loads', async ({ page }) => {
+    const errors = [];
+    page.on('console', msg => {
+      if (msg.type() === 'error') {
+        errors.push(msg.text());
+      }
+    });
+    page.on('pageerror', err => {
+      errors.push(err.message);
+    });
+
+    // Unlock scenarios stage
+    await page.goto(BASE_URL);
+    await page.evaluate(() => {
+      localStorage.setItem('libregto-progress', JSON.stringify({
+        version: 1,
+        stages: {
+          scenarios: {
+            unlocked: true,
+            modules: {
+              'defend-3bet': { unlocked: true },
+              'bb-defense': { unlocked: true },
+              '3bet-value': { unlocked: true },
+              'sb-3bet-fold': { unlocked: true },
+              'cold-4bet': { unlocked: false },
+              'board-texture': { unlocked: true }
+            }
+          }
+        }
+      }));
+    });
+
+    await page.goto(BASE_URL + '/#/scenarios');
+    await page.waitForTimeout(1000);
+
+    if (errors.length > 0) {
+      console.log('Scenarios hub errors:', errors);
+    }
+
+    expect(errors).toHaveLength(0);
+
+    // Check if scenarios hub loads
+    const content = await page.locator('#main-content').textContent();
+    console.log('Scenarios hub content:', content?.substring(0, 200));
+  });
+
+  test('defend-3bet scenario loads and starts', async ({ page }) => {
+    const errors = [];
+    page.on('pageerror', err => {
+      errors.push(err.message);
+    });
+
+    await page.goto(BASE_URL);
+    await page.evaluate(() => {
+      localStorage.setItem('libregto-progress', JSON.stringify({
+        version: 1,
+        stages: {
+          scenarios: {
+            unlocked: true,
+            modules: { 'defend-3bet': { unlocked: true } }
+          }
+        }
+      }));
+    });
+
+    await page.goto(BASE_URL + '/#/scenario/defend-3bet');
+    await page.waitForTimeout(500);
+
+    const startBtn = page.locator('#start-scenario-btn');
+    await expect(startBtn).toBeVisible();
+    await startBtn.click();
+
+    // Wait for countdown (3-2-1-GO = ~3.2s) + first question render
+    await page.waitForTimeout(4500);
+
+    if (errors.length > 0) {
+      console.log('Defend-3bet scenario errors:', errors);
+    }
+
+    expect(errors).toHaveLength(0);
+
+    // Check for decision buttons
+    const decisionBtns = page.locator('.scenario-decision-btn');
+    const count = await decisionBtns.count();
+    expect(count).toBeGreaterThanOrEqual(2);
+  });
+
+  test('bb-defense scenario loads and starts', async ({ page }) => {
+    const errors = [];
+    page.on('pageerror', err => {
+      errors.push(err.message);
+    });
+
+    await page.goto(BASE_URL);
+    await page.evaluate(() => {
+      localStorage.setItem('libregto-progress', JSON.stringify({
+        version: 1,
+        stages: {
+          scenarios: {
+            unlocked: true,
+            modules: { 'bb-defense': { unlocked: true } }
+          }
+        }
+      }));
+    });
+
+    await page.goto(BASE_URL + '/#/scenario/bb-defense');
+    await page.waitForTimeout(500);
+
+    const startBtn = page.locator('#start-scenario-btn');
+    await expect(startBtn).toBeVisible();
+    await startBtn.click();
+
+    await page.waitForTimeout(4500);
+
+    if (errors.length > 0) {
+      console.log('BB-defense scenario errors:', errors);
+    }
+
+    expect(errors).toHaveLength(0);
+
+    const decisionBtns = page.locator('.scenario-decision-btn');
+    const count = await decisionBtns.count();
+    expect(count).toBeGreaterThanOrEqual(2);
+  });
+
+  test('3bet-value scenario loads and starts', async ({ page }) => {
+    const errors = [];
+    page.on('pageerror', err => {
+      errors.push(err.message);
+    });
+
+    await page.goto(BASE_URL);
+    await page.evaluate(() => {
+      localStorage.setItem('libregto-progress', JSON.stringify({
+        version: 1,
+        stages: {
+          scenarios: {
+            unlocked: true,
+            modules: { '3bet-value': { unlocked: true } }
+          }
+        }
+      }));
+    });
+
+    await page.goto(BASE_URL + '/#/scenario/3bet-value');
+    await page.waitForTimeout(500);
+
+    const startBtn = page.locator('#start-scenario-btn');
+    await expect(startBtn).toBeVisible();
+    await startBtn.click();
+
+    await page.waitForTimeout(4500);
+
+    if (errors.length > 0) {
+      console.log('3bet-value scenario errors:', errors);
+    }
+
+    expect(errors).toHaveLength(0);
+
+    const decisionBtns = page.locator('.scenario-decision-btn');
+    const count = await decisionBtns.count();
+    expect(count).toBeGreaterThanOrEqual(2);
+  });
+
+  test('sb-3bet-fold scenario loads and starts', async ({ page }) => {
+    const errors = [];
+    page.on('pageerror', err => {
+      errors.push(err.message);
+    });
+
+    await page.goto(BASE_URL);
+    await page.evaluate(() => {
+      localStorage.setItem('libregto-progress', JSON.stringify({
+        version: 1,
+        stages: {
+          scenarios: {
+            unlocked: true,
+            modules: { 'sb-3bet-fold': { unlocked: true } }
+          }
+        }
+      }));
+    });
+
+    await page.goto(BASE_URL + '/#/scenario/sb-3bet-fold');
+    await page.waitForTimeout(500);
+
+    const startBtn = page.locator('#start-scenario-btn');
+    await expect(startBtn).toBeVisible();
+    await startBtn.click();
+
+    await page.waitForTimeout(4500);
+
+    if (errors.length > 0) {
+      console.log('SB-3bet-fold scenario errors:', errors);
+    }
+
+    expect(errors).toHaveLength(0);
+
+    // SB 3-bet or fold has 2 buttons (binary decision)
+    const decisionBtns = page.locator('.scenario-decision-btn');
+    const count = await decisionBtns.count();
+    expect(count).toBe(2);
+  });
+
+  test('cold-4bet scenario loads and starts', async ({ page }) => {
+    const errors = [];
+    page.on('pageerror', err => {
+      errors.push(err.message);
+    });
+
+    await page.goto(BASE_URL);
+    await page.evaluate(() => {
+      localStorage.setItem('libregto-progress', JSON.stringify({
+        version: 1,
+        stages: {
+          scenarios: {
+            unlocked: true,
+            modules: { 'cold-4bet': { unlocked: true } }
+          }
+        }
+      }));
+    });
+
+    await page.goto(BASE_URL + '/#/scenario/cold-4bet');
+    await page.waitForTimeout(500);
+
+    const startBtn = page.locator('#start-scenario-btn');
+    await expect(startBtn).toBeVisible();
+    await startBtn.click();
+
+    await page.waitForTimeout(4500);
+
+    if (errors.length > 0) {
+      console.log('Cold-4bet scenario errors:', errors);
+    }
+
+    expect(errors).toHaveLength(0);
+
+    // Cold 4-bet has 2 buttons (binary decision: 4-bet or fold)
+    const decisionBtns = page.locator('.scenario-decision-btn');
+    const count = await decisionBtns.count();
+    expect(count).toBe(2);
+  });
+
+  test('board-texture scenario loads and starts', async ({ page }) => {
+    const errors = [];
+    page.on('pageerror', err => {
+      errors.push(err.message);
+    });
+
+    await page.goto(BASE_URL);
+    await page.evaluate(() => {
+      localStorage.setItem('libregto-progress', JSON.stringify({
+        version: 1,
+        stages: {
+          scenarios: {
+            unlocked: true,
+            modules: { 'board-texture': { unlocked: true } }
+          }
+        }
+      }));
+    });
+
+    await page.goto(BASE_URL + '/#/scenario/board-texture');
+    await page.waitForTimeout(500);
+
+    const startBtn = page.locator('#start-scenario-btn');
+    await expect(startBtn).toBeVisible();
+    await startBtn.click();
+
+    await page.waitForTimeout(4500);
+
+    if (errors.length > 0) {
+      console.log('Board-texture scenario errors:', errors);
+    }
+
+    expect(errors).toHaveLength(0);
+
+    // Board texture has 4 texture option buttons
+    const textureOptions = page.locator('.texture-option');
+    const count = await textureOptions.count();
+    expect(count).toBe(4);
+
+    // Board cards should be visible
+    const boardCards = page.locator('#board-cards .playing-card');
+    const cardCount = await boardCards.count();
+    expect(cardCount).toBe(3); // Flop = 3 cards
+  });
+
+  test('methodology page loads', async ({ page }) => {
+    const errors = [];
+    page.on('pageerror', err => {
+      errors.push(err.message);
+    });
+
+    await page.goto(BASE_URL + '/#/methodology');
+    await page.waitForTimeout(500);
+
+    if (errors.length > 0) {
+      console.log('Methodology page errors:', errors);
+    }
+
+    expect(errors).toHaveLength(0);
+
+    // Check for methodology sections
+    const sections = page.locator('.methodology__section');
+    const count = await sections.count();
+    expect(count).toBeGreaterThanOrEqual(5);
+  });
+});
+
 test.describe('Debug: Find all errors', () => {
   test('check home page for JS errors', async ({ page }) => {
     const errors = [];

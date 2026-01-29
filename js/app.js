@@ -16,6 +16,14 @@ import { renderOpenFoldDrill } from './drills/openFoldDrill.js';
 import { renderEquitySnapDrill } from './drills/equitySnapDrill.js';
 import { renderRangeCheckDrill } from './drills/rangeCheckDrill.js';
 import { renderPositionDrill } from './drills/positionDrill.js';
+import { renderScenariosHub } from './scenarios/index.js';
+import { renderDefendVs3BetScenario } from './scenarios/preflopDefend3bet.js';
+import { renderBBDefenseScenario } from './scenarios/preflopBBDefense.js';
+import { render3BetValueScenario } from './scenarios/preflop3betValue.js';
+import { renderSB3BetOrFoldScenario } from './scenarios/preflopSB3betOrFold.js';
+import { renderCold4BetScenario } from './scenarios/preflopCold4bet.js';
+import { renderBoardTextureScenario } from './scenarios/postflopBoardTexture.js';
+import { renderMethodologyPage } from './pages/methodology.js';
 
 // Main content container
 const mainContent = document.getElementById('main-content');
@@ -226,6 +234,8 @@ function renderSettingsPage() {
           understand GTO (Game Theory Optimal) poker strategy fundamentals.
         </p>
         <p class="lesson__text mt-4">
+          <a href="#/methodology" class="link">Our Methodology</a>
+          &nbsp;&middot;&nbsp;
           <a href="https://github.com/rdpharr/libregto/issues" target="_blank" rel="noopener" class="link">Report an Issue</a>
           &nbsp;&middot;&nbsp;
           <a href="https://buymeacoffee.com/rdpharr" target="_blank" rel="noopener" class="link link--coffee">Buy me a coffee ☕</a>
@@ -352,6 +362,36 @@ function renderDrillPage(params) {
   }
 }
 
+/**
+ * Render a scenario page
+ */
+function renderScenarioPage(params) {
+  const scenarioId = params.id;
+
+  switch (scenarioId) {
+    case 'defend-3bet':
+      renderDefendVs3BetScenario(mainContent);
+      break;
+    case 'bb-defense':
+      renderBBDefenseScenario(mainContent);
+      break;
+    case '3bet-value':
+      render3BetValueScenario(mainContent);
+      break;
+    case 'sb-3bet-fold':
+      renderSB3BetOrFoldScenario(mainContent);
+      break;
+    case 'cold-4bet':
+      renderCold4BetScenario(mainContent);
+      break;
+    case 'board-texture':
+      renderBoardTextureScenario(mainContent);
+      break;
+    default:
+      render404();
+  }
+}
+
 // Register routes
 router.register('/', renderHomePage);
 router.register('/foundations', renderFoundationsPage);
@@ -360,7 +400,9 @@ router.register('/drills', () => renderDrillsHub(mainContent));
 router.register('/drill/:id', renderDrillPage);
 router.register('/settings', renderSettingsPage);
 router.register('/about', renderAboutPage);
-router.register('/scenarios', () => renderComingSoon('Scenarios'));
+router.register('/scenarios', () => renderScenariosHub(mainContent));
+router.register('/scenario/:id', renderScenarioPage);
+router.register('/methodology', () => renderMethodologyPage(mainContent));
 router.register('/full-hands', () => renderComingSoon('Full Hands'));
 router.register('*', render404);
 
