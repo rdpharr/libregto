@@ -339,12 +339,15 @@ function handleAnswer(answeredYes) {
     showRangePreview();
   }
 
-  // Next question after delay
-  setTimeout(() => {
-    if (drillActive) {
-      showNextQuestion();
-    }
-  }, isCorrect ? 800 : 2000);
+  // Next question: auto-advance for correct, wait for click on incorrect
+  if (isCorrect) {
+    setTimeout(() => {
+      if (drillActive) {
+        showNextQuestion();
+      }
+    }, 800);
+  }
+  // For incorrect answers, continue button is added by showRangePreview()
 }
 
 /**
@@ -385,11 +388,22 @@ function showRangePreview() {
 
   const range = getOpeningRangeForPosition(currentPosition);
   const rangeGrid = new RangeGrid({
-    mode: 'display',
     compact: true,
-    highlightHand: currentHand
+    highlightHand: currentHand,
+    range: range
   });
-  rangeGrid.render(gridContainer, range);
+  rangeGrid.render(gridContainer);
+
+  // Add continue button
+  const continueBtn = document.createElement('button');
+  continueBtn.className = 'btn btn--primary range-preview__continue';
+  continueBtn.textContent = 'Continue';
+  continueBtn.addEventListener('click', () => {
+    if (drillActive) {
+      showNextQuestion();
+    }
+  });
+  previewEl.appendChild(continueBtn);
 }
 
 /**

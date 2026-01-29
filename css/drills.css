@@ -1250,6 +1250,11 @@
   -webkit-overflow-scrolling: touch;
 }
 
+.range-preview__continue {
+  display: block;
+  margin: var(--space-4) auto 0;
+}
+
 /* ========== Drills Hub Additional Styles ========== */
 .drills-hub__stats {
   display: flex;
