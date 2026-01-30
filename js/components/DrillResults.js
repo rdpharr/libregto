@@ -77,6 +77,8 @@ export class DrillResults {
         ${stats.passed ? this.renderPassBadge() : this.renderEncouragement(stats)}
 
         ${this.renderFeedbackLinks()}
+
+        ${this.renderShareLinks()}
       </div>
     `;
 
@@ -92,6 +94,9 @@ export class DrillResults {
     this.element.querySelector('.drill-results__btn--hub').addEventListener('click', () => {
       if (this.onBackToHub) this.onBackToHub();
     });
+
+    // Bind share button events
+    this.bindShareEvents();
 
     if (typeof container === 'string') {
       document.querySelector(container).appendChild(this.element);
@@ -243,6 +248,87 @@ export class DrillResults {
         </p>
       </div>
     `;
+  }
+
+  /**
+   * Render share links (subtle, icon-only)
+   */
+  renderShareLinks() {
+    return `
+      <div class="drill-results__share">
+        <span class="drill-results__share-label">Share:</span>
+        <button class="drill-results__share-btn" data-share="twitter" title="Share on X" aria-label="Share on X">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
+        </button>
+        <button class="drill-results__share-btn" data-share="copy" title="Copy link" aria-label="Copy link">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+        </button>
+        <button class="drill-results__share-btn drill-results__share-btn--native" data-share="native" title="Share" aria-label="Share">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
+        </button>
+      </div>
+    `;
+  }
+
+  /**
+   * Get share text for this result
+   */
+  getShareText() {
+    const accuracy = Math.round(this.stats?.accuracy || 0);
+    return `I scored ${accuracy}% on ${this.drillName} at LibreGTO - a free open source GTO poker trainer!`;
+  }
+
+  /**
+   * Get share URL
+   */
+  getShareUrl() {
+    return 'https://libregto.com';
+  }
+
+  /**
+   * Handle share button clicks
+   */
+  bindShareEvents() {
+    const shareButtons = this.element.querySelectorAll('.drill-results__share-btn');
+
+    shareButtons.forEach(btn => {
+      btn.addEventListener('click', async (e) => {
+        const shareType = btn.dataset.share;
+        const text = this.getShareText();
+        const url = this.getShareUrl();
+
+        if (shareType === 'twitter') {
+          const twitterUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}&url=${encodeURIComponent(url)}`;
+          window.open(twitterUrl, '_blank', 'width=550,height=420');
+        } else if (shareType === 'copy') {
+          try {
+            await navigator.clipboard.writeText(`${text} ${url}`);
+            btn.classList.add('drill-results__share-btn--copied');
+            btn.title = 'Copied!';
+            setTimeout(() => {
+              btn.classList.remove('drill-results__share-btn--copied');
+              btn.title = 'Copy link';
+            }, 2000);
+          } catch (err) {
+            console.error('Failed to copy:', err);
+          }
+        } else if (shareType === 'native' && navigator.share) {
+          try {
+            await navigator.share({ title: 'LibreGTO', text, url });
+          } catch (err) {
+            if (err.name !== 'AbortError') {
+              console.error('Share failed:', err);
+            }
+          }
+        }
+      });
+    });
+
+    // Hide native share button if Web Share API not available
+    if (!navigator.share) {
+      const nativeBtn = this.element.querySelector('.drill-results__share-btn--native');
+      if (nativeBtn) nativeBtn.style.display = 'none';
+    }
   }
 
   /**
