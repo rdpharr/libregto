@@ -9,14 +9,38 @@
 import { ScenarioEngine, randomPick, formatTime } from './ScenarioEngine.js';
 import { renderScenarioQuestion, showScenarioFeedback } from '../components/ScenarioDisplay.js';
 import { generateOpenActions } from '../components/ActionHistory.js';
-import { isScenarioUnlocked, getScenarioProgress, getScenarioThreshold } from '../storage.js';
+import { createDifficultySelector } from '../components/DifficultySelector.js';
+import { showCountdown } from '../components/Countdown.js';
+import { updateStartScreenForDifficulty } from '../utils/difficultyUtils.js';
+import { isScenarioUnlocked, getScenarioProgress, getScenarioThreshold, isScenarioHardModeUnlocked } from '../storage.js';
 import { BB_DEFENSE, getCorrectAction, getRangeBreakdown, isHandInRange } from '../data/scenarioRanges.js';
 import { getRandomHand } from '../data/hands.js';
 import { DrillResults } from '../components/DrillResults.js';
 
 const SCENARIO_ID = 'bb-defense';
 const SCENARIO_NAME = 'BB Defense';
-const TOTAL_QUESTIONS = 20;
+
+// Difficulty configuration
+const DIFFICULTY_CONFIG = {
+  easy: {
+    totalQuestions: 20,
+    threeBetChance: 0.20,
+    callChance: 0.35,
+    // Remaining ~45% are fold hands
+    passThreshold: 75
+  },
+  hard: {
+    totalQuestions: 25,
+    threeBetChance: 0.28,  // More 3-bet hands
+    callChance: 0.32,
+    // Variable open sizes in hard mode
+    variableOpenSizes: true,
+    useMarginalFolds: true,
+    passThreshold: 80
+  }
+};
+
+let selectedDifficulty = 'easy';
 
 // Opener positions to practice against
 const OPENER_POSITIONS = [
@@ -26,6 +50,9 @@ const OPENER_POSITIONS = [
   { position: 'UTG', key: 'vs_UTG', openSize: 2.5 },
   { position: 'SB', key: 'vs_SB', openSize: 2.5 }
 ];
+
+// Variable open sizes for hard mode
+const VARIABLE_OPEN_SIZES = [2.0, 2.25, 2.5, 2.75, 3.0];
 
 let engine = null;
 let container = null;
@@ -61,8 +88,14 @@ function renderLockedState() {
  * Render start screen
  */
 function renderStartScreen() {
-  const previousBest = getScenarioProgress(SCENARIO_ID);
-  const threshold = getScenarioThreshold(SCENARIO_ID);
+  const progress = getScenarioProgress(SCENARIO_ID);
+  const hardUnlocked = isScenarioHardModeUnlocked(SCENARIO_ID);
+  const config = DIFFICULTY_CONFIG[selectedDifficulty];
+  const threshold = config.passThreshold;
+
+  const currentStats = selectedDifficulty === 'hard' && progress?.hard
+    ? progress.hard
+    : progress;
 
   container.innerHTML = `
     <div class="drill-start container">
@@ -85,18 +118,20 @@ function renderStartScreen() {
             You're in the big blind facing an open raise. Decide whether to <strong>Call</strong>,
             <strong>3-bet</strong>, or <strong>Fold</strong> based on the opener's position and your hand.
           </p>
-          <div class="drill-start__meta">
-            <span>${TOTAL_QUESTIONS} questions</span>
+          <div class="drill-start__meta" id="drill-meta">
+            <span>${config.totalQuestions} questions</span>
             <span>Pass: ${threshold}%</span>
           </div>
         </div>
 
-        ${previousBest && previousBest.attempts > 0 ? `
-          <div class="drill-start__best">
+        <div id="difficulty-selector-container"></div>
+
+        ${currentStats && (currentStats.attempts > 0 || (progress?.hard?.attempts > 0)) ? `
+          <div class="drill-start__best" id="best-stats">
             <div class="drill-start__best-title">Your Best</div>
             <div class="drill-start__best-stats">
-              <span>Score: ${Math.round(previousBest.bestScore)}%</span>
-              <span>Attempts: ${previousBest.attempts}</span>
+              <span>Score: ${Math.round(currentStats.bestScore || 0)}%</span>
+              <span>Attempts: ${currentStats.attempts || 0}</span>
             </div>
           </div>
         ` : ''}
@@ -108,6 +143,20 @@ function renderStartScreen() {
     </div>
   `;
 
+  // Render difficulty selector
+  const selectorContainer = document.getElementById('difficulty-selector-container');
+  const selector = createDifficultySelector({
+    selected: selectedDifficulty,
+    hardUnlocked: hardUnlocked,
+    easyStats: progress ? { bestScore: progress.bestScore } : null,
+    hardStats: progress?.hard ? { bestScore: progress.hard.bestScore } : null,
+    onSelect: (difficulty) => {
+      selectedDifficulty = difficulty;
+      updateStartScreenForDifficulty(DIFFICULTY_CONFIG[difficulty], difficulty, progress, { showStreak: false, showTime: false, showAttempts: true });
+    }
+  });
+  selectorContainer.appendChild(selector);
+
   document.getElementById('start-scenario-btn').addEventListener('click', startScenario);
 }
 
@@ -115,11 +164,13 @@ function renderStartScreen() {
  * Start the scenario
  */
 function startScenario() {
+  const config = DIFFICULTY_CONFIG[selectedDifficulty];
+
   engine = new ScenarioEngine(
     {
       id: SCENARIO_ID,
       name: SCENARIO_NAME,
-      totalQuestions: TOTAL_QUESTIONS,
+      totalQuestions: config.totalQuestions,
       generateQuestion: generateQuestion,
       validateAnswer: validateAnswer,
       getExplanation: getExplanation,
@@ -129,69 +180,52 @@ function startScenario() {
       onQuestionReady: onQuestionReady,
       onAnswerResult: onAnswerResult,
       onScenarioEnd: onScenarioEnd
-    }
+    },
+    selectedDifficulty
   );
 
-  showCountdown(() => {
+  showCountdown(container, () => {
     engine.start();
   });
-}
-
-/**
- * Show countdown overlay
- */
-function showCountdown(callback) {
-  const overlay = document.createElement('div');
-  overlay.className = 'drill-countdown';
-  overlay.innerHTML = '<div class="drill-countdown__number">3</div>';
-  container.appendChild(overlay);
-
-  let count = 3;
-  const countdownEl = overlay.querySelector('.drill-countdown__number');
-
-  const interval = setInterval(() => {
-    count--;
-    if (count > 0) {
-      countdownEl.textContent = count;
-      countdownEl.classList.remove('drill-countdown__number--pulse');
-      void countdownEl.offsetWidth;
-      countdownEl.classList.add('drill-countdown__number--pulse');
-    } else if (count === 0) {
-      countdownEl.textContent = 'GO!';
-      countdownEl.classList.add('drill-countdown__number--go');
-    } else {
-      clearInterval(interval);
-      overlay.remove();
-      callback();
-    }
-  }, 800);
 }
 
 /**
  * Generate a question
  */
 function generateQuestion(state) {
-  // Pick a random opener position
-  const opener = randomPick(OPENER_POSITIONS);
-  const rangeData = BB_DEFENSE[opener.key];
+  const config = DIFFICULTY_CONFIG[selectedDifficulty];
 
-  // Generate a balanced hand selection
+  // Pick a random opener position
+  const baseOpener = randomPick(OPENER_POSITIONS);
+  const rangeData = BB_DEFENSE[baseOpener.key];
+
+  // Determine open size (variable in hard mode)
+  const openSize = config.variableOpenSizes
+    ? randomPick(VARIABLE_OPEN_SIZES)
+    : baseOpener.openSize;
+
+  const opener = { ...baseOpener, openSize };
+
+  // Generate hand based on difficulty config
   let hand;
   const roll = Math.random();
 
-  if (roll < 0.20 && rangeData.threeBet.length > 0) {
+  const threeBetThreshold = config.threeBetChance;
+  const callThreshold = threeBetThreshold + config.callChance;
+
+  if (roll < threeBetThreshold && rangeData.threeBet.length > 0) {
     // Pick a 3-bet hand
     hand = randomPick(rangeData.threeBet);
-  } else if (roll < 0.55 && rangeData.call.length > 0) {
+  } else if (roll < callThreshold && rangeData.call.length > 0) {
     // Pick a call hand
     hand = randomPick(rangeData.call);
   } else {
     // Pick a fold hand
-    hand = generateFoldHand(rangeData);
+    hand = generateFoldHand(rangeData, config.useMarginalFolds);
   }
 
   // Calculate pot size
-  const potSize = opener.openSize + 0.5 + 1; // open + SB + BB
+  const potSize = openSize + 0.5 + 1; // open + SB + BB
 
   return {
     opener,
@@ -206,28 +240,47 @@ function generateQuestion(state) {
 
 /**
  * Generate a hand that should be folded
+ * @param {Object} rangeData - The range data for this matchup
+ * @param {boolean} useMarginalFolds - If true, only use marginal fold hands (harder)
  */
-function generateFoldHand(rangeData) {
+function generateFoldHand(rangeData, useMarginalFolds = false) {
   const allThreeBet = rangeData.threeBet || [];
   const allCall = rangeData.call || [];
   const notFold = [...allThreeBet, ...allCall];
 
-  const foldHands = [
-    'K5o', 'K4o', 'K3o', 'K2o',
-    'Q6o', 'Q5o', 'Q4o', 'Q3o', 'Q2o',
-    'J6o', 'J5o', 'J4o', 'J3o', 'J2o',
-    'T6o', 'T5o', 'T4o', 'T3o', 'T2o',
-    '95o', '94o', '93o', '92o',
-    '84o', '83o', '82o',
+  // Marginal fold hands - close to the defending range (harder)
+  const marginalFoldHands = [
+    'K5o', 'K4o', 'K3o',
+    'Q6o', 'Q5o', 'Q4o',
+    'J6o', 'J5o',
+    'T6o', 'T5o',
+    '95o', '94o',
+    '85o', '84o',
+    '75o', '74o',
+    '65o', '64o',
+    'K5s', 'K4s',
+    'Q5s', 'Q4s',
+    'J5s', 'J4s',
+    'T4s', 'T3s'
+  ];
+
+  // Clear fold hands (easier)
+  const clearFoldHands = [
+    'K2o',
+    'Q3o', 'Q2o',
+    'J4o', 'J3o', 'J2o',
+    'T4o', 'T3o', 'T2o',
+    '93o', '92o',
+    '83o', '82o',
     '73o', '72o',
     '62o', '63o',
     '52o',
     '42o', '43o',
     '32o',
-    'K4s', 'K3s', 'K2s',
-    'Q5s', 'Q4s', 'Q3s', 'Q2s',
-    'J5s', 'J4s', 'J3s', 'J2s',
-    'T4s', 'T3s', 'T2s',
+    'K3s', 'K2s',
+    'Q3s', 'Q2s',
+    'J3s', 'J2s',
+    'T2s',
     '93s', '92s',
     '83s', '82s',
     '72s', '73s',
@@ -235,13 +288,16 @@ function generateFoldHand(rangeData) {
     '52s'
   ];
 
-  const actualFolds = foldHands.filter(h => !notFold.includes(h));
+  // Use marginal hands only in hard mode, otherwise mix both
+  const foldPool = useMarginalFolds ? marginalFoldHands : [...marginalFoldHands, ...clearFoldHands];
+
+  const actualFolds = foldPool.filter(h => !notFold.includes(h));
 
   if (actualFolds.length > 0) {
     return randomPick(actualFolds);
   }
 
-  return randomPick(['K3o', 'Q4o', 'J5o', 'T4o', '94o']);
+  return randomPick(['K4o', 'Q5o', 'J5o', 'T5o', '94o']);
 }
 
 /**
@@ -337,6 +393,7 @@ function onQuestionReady(data) {
     actionHistory: actions,
     potSize: questionData.potSize,
     effectiveStack: questionData.effectiveStack,
+    difficulty: selectedDifficulty,
     decisions: [
       { action: 'Call', label: 'CALL', detail: `${questionData.opener.openSize - 1}BB more` },
       { action: '3-bet', label: '3-BET', detail: '~10BB' },

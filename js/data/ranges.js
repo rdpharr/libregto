@@ -352,3 +352,51 @@ export function isHandInRange(hand, position) {
 export function getOpeningRangeForPosition(position) {
   return OPENING_RANGES[position] || new Set();
 }
+
+// Marginal hands by position (hands that are borderline open/fold)
+// These are hands near the edge of the range - harder decisions
+const MARGINAL_HANDS = {
+  UTG: [
+    '77', '66', // Lower pairs
+    'ATs', 'KJs', 'QJs', 'JTs', // Suited broadways at edge
+    'AJo', 'KQo', // Offsuit at edge
+    'A9s', 'KTs' // Just outside range
+  ],
+  MP: [
+    '66', '55', // Lower pairs
+    'A9s', 'KTs', 'QTs', 'T9s', // Suited at edge
+    'ATo', 'KJo', 'KTo', // Offsuit at edge
+    'A8s', 'K9s', 'Q9s' // Just outside range
+  ],
+  CO: [
+    '44', '33', // Lower pairs
+    'K7s', 'K6s', 'Q9s', 'Q8s', // Suited at edge
+    '65s', '54s', // Suited connectors at edge
+    'A9o', 'KTo', 'QTo', 'JTo', // Offsuit at edge
+    'K5s', 'Q7s', 'J9s' // Just outside range
+  ],
+  BTN: [
+    '22', // Lowest pair
+    'K2s', 'Q6s', 'Q7s', 'J7s', // Suited at edge
+    '64s', '53s', '43s', // Small suited connectors
+    'K8o', 'Q9o', 'J9o', 'T8o', '87o', // Offsuit at edge
+    'J6s', 'T6s', '95s' // Just outside range
+  ],
+  SB: [
+    '22', '33', // Low pairs
+    'K4s', 'K3s', 'Q7s', 'Q6s', // Suited at edge
+    'J8s', '75s', '64s', '54s', // Connectors at edge
+    'A5o', 'K9o', 'Q9o', 'J9o', 'T9o', '98o', // Offsuit at edge
+    'K2s', 'Q5s', 'J7s' // Just outside range
+  ]
+};
+
+/**
+ * Get marginal hands for a position (hands at the edge of the range)
+ * Used for hard mode drills to present more challenging decisions
+ * @param {string} position - The position
+ * @returns {string[]} Array of marginal hands
+ */
+export function getMarginalHands(position) {
+  return MARGINAL_HANDS[position] || [];
+}

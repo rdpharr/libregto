@@ -9,7 +9,8 @@ import {
   getDrillStats,
   getDrillAchievements,
   getDrillThreshold,
-  isStageUnlocked
+  isStageUnlocked,
+  isDrillHardModeUnlocked
 } from '../storage.js';
 
 // Drill metadata
@@ -134,6 +135,16 @@ function renderDrillCard(drillId, progress, index, currentDrill) {
   const isCompleted = progress?.completed || false;
   const isCurrent = drillId === currentDrill;
   const threshold = getDrillThreshold(drillId);
+  const hardUnlocked = isDrillHardModeUnlocked(drillId);
+  const hardCompleted = progress?.hard?.completed || false;
+
+  // Get easy mode stats (default stats)
+  const easyScore = progress?.bestScore || 0;
+  const easyStreak = progress?.bestStreak || 0;
+
+  // Get hard mode stats
+  const hardScore = progress?.hard?.bestScore || 0;
+  const hardStreak = progress?.hard?.bestStreak || 0;
 
   return `
     <div class="drill-card ${!isUnlocked ? 'drill-card--locked' : ''} ${isCompleted ? 'drill-card--completed' : ''} ${isCurrent ? 'drill-card--current' : ''} animate-fade-in-up stagger-${index + 2}"
@@ -152,9 +163,17 @@ function renderDrillCard(drillId, progress, index, currentDrill) {
       </div>
       ${isCompleted ? `
         <div class="drill-card__stats">
-          <div class="drill-card__best-score">${Math.round(progress.bestScore)}%</div>
-          <div class="drill-card__best-streak">🔥 ${progress.bestStreak}</div>
-          ${progress.bestTime ? `<div class="drill-card__best-time">⚡ ${formatTime(progress.bestTime)}</div>` : ''}
+          <div class="drill-card__difficulty-stats">
+            <div class="drill-card__mode-stat ${isCompleted ? 'drill-card__mode-stat--complete' : ''}">
+              <span class="drill-card__mode-label">Easy</span>
+              <span class="drill-card__mode-score">${Math.round(easyScore)}%</span>
+            </div>
+            <div class="drill-card__mode-stat ${hardCompleted ? 'drill-card__mode-stat--complete' : ''} ${!hardUnlocked ? 'drill-card__mode-stat--locked' : ''}">
+              <span class="drill-card__mode-label">Hard</span>
+              <span class="drill-card__mode-score">${hardUnlocked ? (hardScore > 0 ? `${Math.round(hardScore)}%` : '--') : '🔒'}</span>
+            </div>
+          </div>
+          <div class="drill-card__best-streak">🔥 ${Math.max(easyStreak, hardStreak)}</div>
         </div>
       ` : isUnlocked ? `
         <div class="drill-card__arrow">→</div>

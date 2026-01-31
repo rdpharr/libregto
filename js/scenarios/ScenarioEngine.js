@@ -20,8 +20,10 @@ export class ScenarioEngine {
    * @param {Function} config.validateAnswer - Function to validate answer
    * @param {Function} config.getExplanation - Function to get explanation for answer
    * @param {Object} callbacks - Event callbacks
+   * @param {string} difficulty - 'easy' or 'hard' (default: 'easy')
    */
-  constructor(config, callbacks = {}) {
+  constructor(config, callbacks = {}, difficulty = 'easy') {
+    this.difficulty = difficulty;
     this.config = {
       id: config.id,
       name: config.name,
@@ -184,21 +186,26 @@ export class ScenarioEngine {
     this.state.active = false;
 
     const stats = this.getFinalStats();
+    const threshold = getScenarioThreshold(this.config.id, this.difficulty);
 
-    // Save progress
-    updateScenarioProgress(this.config.id, stats);
+    // Save progress with difficulty
+    updateScenarioProgress(this.config.id, stats, this.difficulty);
 
     // Get previous best for comparison
-    const previousBest = getScenarioProgress(this.config.id);
+    const progress = getScenarioProgress(this.config.id);
+    const previousBest = this.difficulty === 'hard' && progress?.hard
+      ? { ...progress, bestScore: progress.hard.bestScore }
+      : progress;
 
     // Notify callback
     this.callbacks.onScenarioEnd({
       stats,
       previousBest,
-      passed: stats.accuracy >= getScenarioThreshold(this.config.id),
-      passThreshold: getScenarioThreshold(this.config.id),
+      passed: stats.accuracy >= threshold,
+      passThreshold: threshold,
       categoryStats: this.state.categoryStats,
-      answers: this.state.answers
+      answers: this.state.answers,
+      difficulty: this.difficulty
     });
   }
 
@@ -228,6 +235,7 @@ export class ScenarioEngine {
     const total = this.config.totalQuestions;
     const correct = this.state.correct;
     const accuracy = Math.round((correct / total) * 100);
+    const threshold = getScenarioThreshold(this.config.id, this.difficulty);
 
     const avgTime = this.state.questionTimes.length > 0
       ? this.state.questionTimes.reduce((a, b) => a + b, 0) / this.state.questionTimes.length
@@ -243,8 +251,16 @@ export class ScenarioEngine {
       accuracy,
       avgTime,
       fastestTime,
-      passed: accuracy >= getScenarioThreshold(this.config.id)
+      passed: accuracy >= threshold
     };
+  }
+
+  /**
+   * Get the current difficulty
+   * @returns {string} 'easy' or 'hard'
+   */
+  getDifficulty() {
+    return this.difficulty;
   }
 
   /**

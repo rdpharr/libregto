@@ -7,13 +7,31 @@ import { PlayingCard } from '../components/PlayingCard.js';
 import { Timer } from '../components/Timer.js';
 import { StreakCounter } from '../components/StreakCounter.js';
 import { DrillResults } from '../components/DrillResults.js';
+import { createDifficultySelector } from '../components/DifficultySelector.js';
+import { showCountdown } from '../components/Countdown.js';
+import { formatTime, updateStartScreenForDifficulty } from '../utils/difficultyUtils.js';
 import { STARTING_HANDS, getHandStrength, getRandomHand, parseHand, formatHandNotation } from '../data/hands.js';
-import { updateDrillProgress, getDrillProgress, getDrillThreshold, isDrillUnlocked } from '../storage.js';
+import { updateDrillProgress, getDrillProgress, getDrillThreshold, isDrillUnlocked, isDrillHardModeUnlocked } from '../storage.js';
 
 const DRILL_ID = 'hand-ranking';
-const TOTAL_QUESTIONS = 20;
-const TIME_LIMIT = 30000; // 30 seconds for timed mode
-const PASS_THRESHOLD = getDrillThreshold(DRILL_ID);
+
+// Difficulty configuration
+const DIFFICULTY_CONFIG = {
+  easy: {
+    totalQuestions: 20,
+    minEquityGap: 0.01,  // 1% minimum difference
+    passThreshold: 75,
+    correctDelay: 800,
+    wrongDelay: 1500
+  },
+  hard: {
+    totalQuestions: 25,
+    minEquityGap: 0.003, // 0.3% minimum difference (closer decisions)
+    passThreshold: 80,
+    correctDelay: 500,
+    wrongDelay: 1000
+  }
+};
 
 let currentQuestion = 0;
 let correct = 0;
@@ -25,6 +43,8 @@ let leftHand = null;
 let rightHand = null;
 let drillActive = false;
 let container = null;
+let selectedDifficulty = 'easy';
+let config = DIFFICULTY_CONFIG.easy;
 
 /**
  * Render the drill page
@@ -50,7 +70,16 @@ export function renderHandRankingDrill(containerElement) {
  * Render the start screen
  */
 function renderStartScreen() {
-  const previousBest = getDrillProgress(DRILL_ID);
+  const progress = getDrillProgress(DRILL_ID);
+  const hardUnlocked = isDrillHardModeUnlocked(DRILL_ID);
+
+  // Set initial config based on selection
+  config = DIFFICULTY_CONFIG[selectedDifficulty];
+
+  // Get stats for current difficulty
+  const currentStats = selectedDifficulty === 'hard' && progress?.hard
+    ? progress.hard
+    : progress;
 
   container.innerHTML = `
     <div class="drill-start container">
@@ -72,19 +101,21 @@ function renderStartScreen() {
           <p class="drill-start__description">
             Two hands will appear side by side. Tap the one with higher preflop equity as fast as you can!
           </p>
-          <div class="drill-start__meta">
-            <span>${TOTAL_QUESTIONS} questions</span>
-            <span>Pass: ${PASS_THRESHOLD}%</span>
+          <div class="drill-start__meta" id="drill-meta">
+            <span>${config.totalQuestions} questions</span>
+            <span>Pass: ${config.passThreshold}%</span>
           </div>
         </div>
 
-        ${previousBest && previousBest.attempts > 0 ? `
-          <div class="drill-start__best">
+        <div id="difficulty-selector-container"></div>
+
+        ${currentStats && (currentStats.attempts > 0 || (progress?.hard?.attempts > 0)) ? `
+          <div class="drill-start__best" id="best-stats">
             <div class="drill-start__best-title">Your Best</div>
             <div class="drill-start__best-stats">
-              <span>Score: ${Math.round(previousBest.bestScore)}%</span>
-              <span>Streak: ${previousBest.bestStreak}</span>
-              ${previousBest.bestTime ? `<span>Avg: ${formatTime(previousBest.bestTime)}</span>` : ''}
+              <span>Score: ${Math.round(currentStats.bestScore || 0)}%</span>
+              <span>Streak: ${currentStats.bestStreak || 0}</span>
+              ${currentStats.bestTime ? `<span>Avg: ${formatTime(currentStats.bestTime)}</span>` : ''}
             </div>
           </div>
         ` : ''}
@@ -95,6 +126,21 @@ function renderStartScreen() {
       </div>
     </div>
   `;
+
+  // Render difficulty selector
+  const selectorContainer = document.getElementById('difficulty-selector-container');
+  const selector = createDifficultySelector({
+    selected: selectedDifficulty,
+    hardUnlocked: hardUnlocked,
+    easyStats: progress ? { bestScore: progress.bestScore, bestStreak: progress.bestStreak, bestTime: progress.bestTime } : null,
+    hardStats: progress?.hard ? { bestScore: progress.hard.bestScore, bestStreak: progress.hard.bestStreak, bestTime: progress.hard.bestTime } : null,
+    onSelect: (difficulty) => {
+      selectedDifficulty = difficulty;
+      config = DIFFICULTY_CONFIG[difficulty];
+      updateStartScreenForDifficulty(config, selectedDifficulty, progress);
+    }
+  });
+  selectorContainer.appendChild(selector);
 
   document.getElementById('start-drill-btn').addEventListener('click', startDrill);
 }
@@ -109,7 +155,13 @@ function startDrill() {
   questionTimes = [];
   drillActive = true;
 
+  // Ensure config is set for selected difficulty
+  config = DIFFICULTY_CONFIG[selectedDifficulty];
+
   const previousBest = getDrillProgress(DRILL_ID);
+  const previousBestForDifficulty = selectedDifficulty === 'hard' && previousBest?.hard
+    ? previousBest.hard
+    : previousBest;
 
   // Create UI
   container.innerHTML = `
@@ -120,7 +172,8 @@ function startDrill() {
         </div>
         <div class="drill-header__center">
           <div class="drill-header__progress">
-            <span id="question-number">1</span>/<span>${TOTAL_QUESTIONS}</span>
+            <span id="question-number">1</span>/<span>${config.totalQuestions}</span>
+            ${selectedDifficulty === 'hard' ? '<span class="drill-header__difficulty">HARD</span>' : ''}
           </div>
         </div>
         <div class="drill-header__right">
@@ -158,7 +211,7 @@ function startDrill() {
 
   // Initialize streak counter
   streakCounter = new StreakCounter({
-    bestStreak: previousBest?.bestStreak || 0
+    bestStreak: previousBestForDifficulty?.bestStreak || 0
   });
   streakCounter.render(document.getElementById('streak-container'));
 
@@ -168,47 +221,17 @@ function startDrill() {
   document.getElementById('right-choice').addEventListener('click', () => handleAnswer('right'));
 
   // Show countdown then start
-  showCountdown(() => {
+  showCountdown(container, () => {
     timer.start();
     showNextQuestion();
   });
 }
 
 /**
- * Show countdown overlay
- */
-function showCountdown(callback) {
-  const overlay = document.createElement('div');
-  overlay.className = 'drill-countdown';
-  overlay.innerHTML = '<div class="drill-countdown__number">3</div>';
-  container.appendChild(overlay);
-
-  let count = 3;
-  const countdownEl = overlay.querySelector('.drill-countdown__number');
-
-  const interval = setInterval(() => {
-    count--;
-    if (count > 0) {
-      countdownEl.textContent = count;
-      countdownEl.classList.remove('drill-countdown__number--pulse');
-      void countdownEl.offsetWidth;
-      countdownEl.classList.add('drill-countdown__number--pulse');
-    } else if (count === 0) {
-      countdownEl.textContent = 'GO!';
-      countdownEl.classList.add('drill-countdown__number--go');
-    } else {
-      clearInterval(interval);
-      overlay.remove();
-      callback();
-    }
-  }, 800);
-}
-
-/**
  * Show the next question
  */
 function showNextQuestion() {
-  if (currentQuestion >= TOTAL_QUESTIONS) {
+  if (currentQuestion >= config.totalQuestions) {
     endDrill();
     return;
   }
@@ -248,14 +271,16 @@ function showNextQuestion() {
 function generateHandPair() {
   let hand1, hand2;
   let strength1, strength2;
+  const minGap = config.minEquityGap;
 
   // Keep generating until we have hands with different strengths
+  // Hard mode uses tighter gaps for more challenging decisions
   do {
     hand1 = getRandomHand();
     hand2 = getRandomHand();
     strength1 = getHandStrength(hand1);
     strength2 = getHandStrength(hand2);
-  } while (hand1 === hand2 || Math.abs(strength1 - strength2) < 0.01);
+  } while (hand1 === hand2 || Math.abs(strength1 - strength2) < minGap);
 
   // Randomly assign to left and right
   if (Math.random() > 0.5) {
@@ -333,12 +358,12 @@ function handleAnswer(choice) {
     showFeedback(false, questionTime, leftHand, rightHand, leftStrength, rightStrength);
   }
 
-  // Next question after delay
+  // Next question after delay (shorter in hard mode)
   setTimeout(() => {
     if (drillActive) {
       showNextQuestion();
     }
-  }, isCorrect ? 800 : 1500);
+  }, isCorrect ? config.correctDelay : config.wrongDelay);
 }
 
 /**
@@ -374,23 +399,29 @@ function endDrill() {
   drillActive = false;
   timer.stop();
 
-  const accuracy = (correct / TOTAL_QUESTIONS) * 100;
+  const totalQuestions = config.totalQuestions;
+  const passThreshold = config.passThreshold;
+
+  const accuracy = (correct / totalQuestions) * 100;
   const avgTime = questionTimes.reduce((a, b) => a + b, 0) / questionTimes.length;
   const fastestTime = Math.min(...questionTimes);
   const bestStreak = streakCounter.getBestStreak();
-  const passed = accuracy >= PASS_THRESHOLD;
+  const passed = accuracy >= passThreshold;
 
-  // Save progress
+  // Save progress with difficulty
   const stats = {
     accuracy,
     avgTime,
     bestStreak,
     passed
   };
-  updateDrillProgress(DRILL_ID, stats);
+  updateDrillProgress(DRILL_ID, stats, selectedDifficulty);
 
   // Get previous best for comparison
-  const previousBest = getDrillProgress(DRILL_ID);
+  const progress = getDrillProgress(DRILL_ID);
+  const previousBest = selectedDifficulty === 'hard' && progress?.hard
+    ? { ...progress, bestScore: progress.hard.bestScore, bestStreak: progress.hard.bestStreak, bestTime: progress.hard.bestTime }
+    : progress;
 
   // Clear container
   container.innerHTML = '<div class="drill-results-container"></div>';
@@ -398,7 +429,7 @@ function endDrill() {
   // Show results
   const results = new DrillResults({
     drillId: DRILL_ID,
-    drillName: 'Hand Ranking Speed',
+    drillName: 'Hand Ranking Speed' + (selectedDifficulty === 'hard' ? ' (Hard)' : ''),
     previousBest,
     onPlayAgain: () => renderHandRankingDrill(container),
     onNextDrill: () => { window.location.hash = '#/drill/open-fold'; },
@@ -411,9 +442,9 @@ function endDrill() {
     fastestTime,
     bestStreak,
     correct,
-    total: TOTAL_QUESTIONS,
+    total: totalQuestions,
     passed,
-    passThreshold: PASS_THRESHOLD
+    passThreshold
   });
 }
 
@@ -426,10 +457,3 @@ function quitDrill() {
   window.location.hash = '#/drills';
 }
 
-/**
- * Format time
- */
-function formatTime(ms) {
-  if (ms < 1000) return `${Math.round(ms)}ms`;
-  return `${(ms / 1000).toFixed(1)}s`;
-}

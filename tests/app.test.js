@@ -611,6 +611,392 @@ test.describe('Stage 3: Scenarios', () => {
   });
 });
 
+test.describe('Difficulty Modes: Drills', () => {
+  // Helper to set up unlocked drill with completed easy mode
+  async function setupDrillWithHardUnlocked(page, drillId) {
+    await page.goto(BASE_URL);
+    await page.evaluate((id) => {
+      localStorage.setItem('libregto-progress', JSON.stringify({
+        version: 1,
+        stages: {
+          drills: {
+            unlocked: true,
+            modules: {
+              [id]: {
+                unlocked: true,
+                completed: true,
+                bestScore: 85,
+                bestStreak: 5,
+                attempts: 1
+              }
+            }
+          }
+        }
+      }));
+    }, drillId);
+  }
+
+  const DRILLS = [
+    'hand-ranking',
+    'open-fold',
+    'equity-snap',
+    'range-check',
+    'position-speed'
+  ];
+
+  for (const drillId of DRILLS) {
+    test(`${drillId} drill shows difficulty selector`, async ({ page }) => {
+      const errors = [];
+      page.on('pageerror', err => errors.push(err.message));
+
+      await setupDrillWithHardUnlocked(page, drillId);
+      await page.goto(BASE_URL + `/#/drill/${drillId}`);
+      await page.waitForTimeout(500);
+
+      // Difficulty selector should be visible
+      const selector = page.locator('#difficulty-selector-container');
+      await expect(selector).toBeVisible();
+
+      // Easy button should exist and be selected by default
+      const easyBtn = page.locator('.difficulty-selector__btn[data-difficulty="easy"]');
+      await expect(easyBtn).toBeVisible();
+
+      // Hard button should exist (unlocked since easy is completed)
+      const hardBtn = page.locator('.difficulty-selector__btn[data-difficulty="hard"]');
+      await expect(hardBtn).toBeVisible();
+
+      expect(errors).toHaveLength(0);
+    });
+
+    test(`${drillId} drill loads in easy mode`, async ({ page }) => {
+      const errors = [];
+      page.on('pageerror', err => errors.push(err.message));
+
+      await setupDrillWithHardUnlocked(page, drillId);
+      await page.goto(BASE_URL + `/#/drill/${drillId}`);
+      await page.waitForTimeout(500);
+
+      // Click start in easy mode (default)
+      const startBtn = page.locator('#start-drill-btn');
+      await expect(startBtn).toBeVisible();
+      await startBtn.click();
+
+      // Wait for countdown
+      await page.waitForTimeout(4500);
+
+      // Should not show HARD badge in header
+      const hardBadge = page.locator('.drill-header__difficulty');
+      await expect(hardBadge).not.toBeVisible();
+
+      if (errors.length > 0) {
+        console.log(`${drillId} easy mode errors:`, errors);
+      }
+      expect(errors).toHaveLength(0);
+    });
+
+    test(`${drillId} drill loads in hard mode`, async ({ page }) => {
+      const errors = [];
+      page.on('pageerror', err => errors.push(err.message));
+
+      await setupDrillWithHardUnlocked(page, drillId);
+      await page.goto(BASE_URL + `/#/drill/${drillId}`);
+      await page.waitForTimeout(500);
+
+      // Click hard mode button
+      const hardBtn = page.locator('.difficulty-selector__btn[data-difficulty="hard"]');
+      await expect(hardBtn).toBeVisible();
+      await hardBtn.click();
+      await page.waitForTimeout(200);
+
+      // Click start
+      const startBtn = page.locator('#start-drill-btn');
+      await startBtn.click();
+
+      // Wait for countdown
+      await page.waitForTimeout(4500);
+
+      // Should show HARD badge in header
+      const hardBadge = page.locator('.drill-header__difficulty');
+      await expect(hardBadge).toBeVisible();
+      await expect(hardBadge).toContainText('HARD');
+
+      if (errors.length > 0) {
+        console.log(`${drillId} hard mode errors:`, errors);
+      }
+      expect(errors).toHaveLength(0);
+    });
+  }
+});
+
+test.describe('Difficulty Modes: Scenarios', () => {
+  // Helper to set up unlocked scenario with completed easy mode
+  async function setupScenarioWithHardUnlocked(page, scenarioId) {
+    await page.goto(BASE_URL);
+    await page.evaluate((id) => {
+      localStorage.setItem('libregto-progress', JSON.stringify({
+        version: 1,
+        stages: {
+          scenarios: {
+            unlocked: true,
+            modules: {
+              [id]: {
+                unlocked: true,
+                completed: true,
+                bestScore: 80,
+                attempts: 1
+              }
+            }
+          }
+        }
+      }));
+    }, scenarioId);
+  }
+
+  // Scenarios that support hard mode
+  const SCENARIOS_WITH_HARD_MODE = [
+    'defend-3bet',
+    'bb-defense',
+    '3bet-value',
+    'sb-3bet-fold'
+  ];
+
+  for (const scenarioId of SCENARIOS_WITH_HARD_MODE) {
+    test(`${scenarioId} scenario shows difficulty selector`, async ({ page }) => {
+      const errors = [];
+      page.on('pageerror', err => errors.push(err.message));
+
+      await setupScenarioWithHardUnlocked(page, scenarioId);
+      await page.goto(BASE_URL + `/#/scenario/${scenarioId}`);
+      await page.waitForTimeout(500);
+
+      // Difficulty selector should be visible
+      const selector = page.locator('#difficulty-selector-container');
+      await expect(selector).toBeVisible();
+
+      // Easy and Hard buttons should exist
+      const easyBtn = page.locator('.difficulty-selector__btn[data-difficulty="easy"]');
+      const hardBtn = page.locator('.difficulty-selector__btn[data-difficulty="hard"]');
+      await expect(easyBtn).toBeVisible();
+      await expect(hardBtn).toBeVisible();
+
+      expect(errors).toHaveLength(0);
+    });
+
+    test(`${scenarioId} scenario loads in easy mode`, async ({ page }) => {
+      const errors = [];
+      page.on('pageerror', err => errors.push(err.message));
+
+      await setupScenarioWithHardUnlocked(page, scenarioId);
+      await page.goto(BASE_URL + `/#/scenario/${scenarioId}`);
+      await page.waitForTimeout(500);
+
+      // Click start in easy mode (default)
+      const startBtn = page.locator('#start-scenario-btn');
+      await expect(startBtn).toBeVisible();
+      await startBtn.click();
+
+      // Wait for countdown
+      await page.waitForTimeout(4500);
+
+      // Should not show HARD badge
+      const hardBadge = page.locator('.drill-header__difficulty');
+      await expect(hardBadge).not.toBeVisible();
+
+      // Scenario should be running (decision buttons visible)
+      const decisionBtns = page.locator('.scenario-decision-btn');
+      const count = await decisionBtns.count();
+      expect(count).toBeGreaterThanOrEqual(2);
+
+      if (errors.length > 0) {
+        console.log(`${scenarioId} easy mode errors:`, errors);
+      }
+      expect(errors).toHaveLength(0);
+    });
+
+    test(`${scenarioId} scenario loads in hard mode`, async ({ page }) => {
+      const errors = [];
+      page.on('pageerror', err => errors.push(err.message));
+
+      await setupScenarioWithHardUnlocked(page, scenarioId);
+      await page.goto(BASE_URL + `/#/scenario/${scenarioId}`);
+      await page.waitForTimeout(500);
+
+      // Click hard mode button
+      const hardBtn = page.locator('.difficulty-selector__btn[data-difficulty="hard"]');
+      await expect(hardBtn).toBeVisible();
+      await hardBtn.click();
+      await page.waitForTimeout(200);
+
+      // Click start
+      const startBtn = page.locator('#start-scenario-btn');
+      await startBtn.click();
+
+      // Wait for countdown
+      await page.waitForTimeout(4500);
+
+      // Should show HARD badge
+      const hardBadge = page.locator('.drill-header__difficulty');
+      await expect(hardBadge).toBeVisible();
+      await expect(hardBadge).toContainText('HARD');
+
+      // Scenario should be running
+      const decisionBtns = page.locator('.scenario-decision-btn');
+      const count = await decisionBtns.count();
+      expect(count).toBeGreaterThanOrEqual(2);
+
+      if (errors.length > 0) {
+        console.log(`${scenarioId} hard mode errors:`, errors);
+      }
+      expect(errors).toHaveLength(0);
+    });
+  }
+
+  // Test that scenarios without hard mode don't show difficulty selector
+  test('cold-4bet scenario does not show difficulty selector (no hard mode)', async ({ page }) => {
+    const errors = [];
+    page.on('pageerror', err => errors.push(err.message));
+
+    await page.goto(BASE_URL);
+    await page.evaluate(() => {
+      localStorage.setItem('libregto-progress', JSON.stringify({
+        version: 1,
+        stages: {
+          scenarios: {
+            unlocked: true,
+            modules: { 'cold-4bet': { unlocked: true, completed: true } }
+          }
+        }
+      }));
+    });
+
+    await page.goto(BASE_URL + '/#/scenario/cold-4bet');
+    await page.waitForTimeout(500);
+
+    // Difficulty selector should NOT be visible (cold-4bet is easy-only)
+    const selector = page.locator('#difficulty-selector-container');
+    const isVisible = await selector.isVisible().catch(() => false);
+
+    // Either not present or empty
+    if (isVisible) {
+      const children = await selector.locator('*').count();
+      expect(children).toBe(0);
+    }
+
+    expect(errors).toHaveLength(0);
+  });
+
+  test('board-texture scenario does not show difficulty selector (no hard mode)', async ({ page }) => {
+    const errors = [];
+    page.on('pageerror', err => errors.push(err.message));
+
+    await page.goto(BASE_URL);
+    await page.evaluate(() => {
+      localStorage.setItem('libregto-progress', JSON.stringify({
+        version: 1,
+        stages: {
+          scenarios: {
+            unlocked: true,
+            modules: { 'board-texture': { unlocked: true, completed: true } }
+          }
+        }
+      }));
+    });
+
+    await page.goto(BASE_URL + '/#/scenario/board-texture');
+    await page.waitForTimeout(500);
+
+    // Difficulty selector should NOT be visible (board-texture is easy-only)
+    const selector = page.locator('#difficulty-selector-container');
+    const isVisible = await selector.isVisible().catch(() => false);
+
+    // Either not present or empty
+    if (isVisible) {
+      const children = await selector.locator('*').count();
+      expect(children).toBe(0);
+    }
+
+    expect(errors).toHaveLength(0);
+  });
+});
+
+test.describe('Difficulty Modes: Hard Mode Locking', () => {
+  test('hard mode is locked when easy mode not completed', async ({ page }) => {
+    const errors = [];
+    page.on('pageerror', err => errors.push(err.message));
+
+    await page.goto(BASE_URL);
+    await page.evaluate(() => {
+      localStorage.setItem('libregto-progress', JSON.stringify({
+        version: 1,
+        stages: {
+          drills: {
+            unlocked: true,
+            modules: {
+              'hand-ranking': {
+                unlocked: true,
+                completed: false,  // Easy not completed
+                bestScore: 50,
+                attempts: 1
+              }
+            }
+          }
+        }
+      }));
+    });
+
+    await page.goto(BASE_URL + '/#/drill/hand-ranking');
+    await page.waitForTimeout(500);
+
+    // Hard button should be disabled/locked
+    const hardBtn = page.locator('.difficulty-selector__btn[data-difficulty="hard"]');
+    await expect(hardBtn).toBeVisible();
+
+    // Check if it's disabled or has locked styling
+    const isDisabled = await hardBtn.isDisabled();
+    const hasLockedClass = await hardBtn.getAttribute('class');
+
+    expect(isDisabled || hasLockedClass?.includes('locked')).toBeTruthy();
+    expect(errors).toHaveLength(0);
+  });
+
+  test('hard mode unlocks after easy mode completed', async ({ page }) => {
+    const errors = [];
+    page.on('pageerror', err => errors.push(err.message));
+
+    await page.goto(BASE_URL);
+    await page.evaluate(() => {
+      localStorage.setItem('libregto-progress', JSON.stringify({
+        version: 1,
+        stages: {
+          drills: {
+            unlocked: true,
+            modules: {
+              'hand-ranking': {
+                unlocked: true,
+                completed: true,  // Easy completed
+                bestScore: 80,
+                attempts: 1
+              }
+            }
+          }
+        }
+      }));
+    });
+
+    await page.goto(BASE_URL + '/#/drill/hand-ranking');
+    await page.waitForTimeout(500);
+
+    // Hard button should NOT be disabled
+    const hardBtn = page.locator('.difficulty-selector__btn[data-difficulty="hard"]');
+    await expect(hardBtn).toBeVisible();
+
+    const isDisabled = await hardBtn.isDisabled();
+    expect(isDisabled).toBeFalsy();
+
+    expect(errors).toHaveLength(0);
+  });
+});
+
 test.describe('Debug: Find all errors', () => {
   test('check home page for JS errors', async ({ page }) => {
     const errors = [];

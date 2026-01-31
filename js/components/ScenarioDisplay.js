@@ -40,6 +40,7 @@ export function renderScenarioQuestion(container, options) {
     decisions,
     prompt = "What's your action?",
     showPositionTable = true,
+    difficulty = 'easy',
     onDecision,
     onQuit
   } = options;
@@ -50,16 +51,17 @@ export function renderScenarioQuestion(container, options) {
   container.innerHTML = `
     <div class="scenario-active">
       <!-- Header -->
-      <div class="scenario-header">
-        <div class="scenario-header__left">
-          <button class="btn btn--ghost" id="quit-scenario">&larr; Quit</button>
+      <div class="scenario-header drill-header">
+        <div class="scenario-header__left drill-header__left">
+          <button class="btn btn--ghost drill-header__back" id="quit-scenario">&larr; Quit</button>
         </div>
-        <div class="scenario-header__center">
-          <div class="scenario-header__progress">
+        <div class="scenario-header__center drill-header__center">
+          <div class="scenario-header__progress drill-header__progress">
             <span id="question-number">${questionNumber}</span>/<span>${totalQuestions}</span>
+            ${difficulty === 'hard' ? '<span class="drill-header__difficulty">HARD</span>' : ''}
           </div>
         </div>
-        <div class="scenario-header__right">
+        <div class="scenario-header__right drill-header__right">
           <span class="scenario-header__name">${scenarioName}</span>
         </div>
       </div>

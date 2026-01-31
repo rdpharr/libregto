@@ -11,7 +11,9 @@ import {
   getScenarioAchievements,
   getCurrentScenario,
   getScenarioOrder,
-  checkScenariosUnlock
+  checkScenariosUnlock,
+  isScenarioHardModeUnlocked,
+  SCENARIOS_WITH_HARD_MODE
 } from '../storage.js';
 
 // Scenario metadata
@@ -215,6 +217,15 @@ function renderScenarioCards(progress, currentScenario, category = 'all') {
       const isCompleted = scenarioProgress.completed || false;
       const isCurrent = id === currentScenario;
       const threshold = getScenarioThreshold(id);
+      const hasHardMode = SCENARIOS_WITH_HARD_MODE.includes(id);
+      const hardUnlocked = hasHardMode && isScenarioHardModeUnlocked(id);
+      const hardCompleted = scenarioProgress.hard?.completed || false;
+
+      // Get easy mode stats (default stats)
+      const easyScore = scenarioProgress.bestScore || 0;
+
+      // Get hard mode stats
+      const hardScore = scenarioProgress.hard?.bestScore || 0;
 
       return `
         <div class="scenario-card ${!isUnlocked ? 'scenario-card--locked' : ''} ${isCompleted ? 'scenario-card--completed' : ''} ${isCurrent ? 'drill-card--current' : ''} animate-fade-in-up stagger-${index + 1}"
@@ -229,10 +240,23 @@ function renderScenarioCards(progress, currentScenario, category = 'all') {
           </div>
           ${isUnlocked ? `
             <div class="scenario-card__stats">
-              <div>
-                <div class="scenario-card__stat-value">${scenarioProgress.bestScore || 0}%</div>
-                <div class="scenario-card__stat-label">Best</div>
-              </div>
+              ${hasHardMode ? `
+                <div class="scenario-card__difficulty-stats">
+                  <div class="scenario-card__mode-stat ${isCompleted ? 'scenario-card__mode-stat--complete' : ''}">
+                    <span class="scenario-card__mode-label">Easy</span>
+                    <span class="scenario-card__mode-score">${Math.round(easyScore)}%</span>
+                  </div>
+                  <div class="scenario-card__mode-stat ${hardCompleted ? 'scenario-card__mode-stat--complete' : ''} ${!hardUnlocked ? 'scenario-card__mode-stat--locked' : ''}">
+                    <span class="scenario-card__mode-label">Hard</span>
+                    <span class="scenario-card__mode-score">${hardUnlocked ? (hardScore > 0 ? `${Math.round(hardScore)}%` : '--') : '&#x1F512;'}</span>
+                  </div>
+                </div>
+              ` : `
+                <div>
+                  <div class="scenario-card__stat-value">${easyScore}%</div>
+                  <div class="scenario-card__stat-label">Best</div>
+                </div>
+              `}
               <div>
                 <div class="scenario-card__stat-value">${scenarioProgress.attempts || 0}</div>
                 <div class="scenario-card__stat-label">Attempts</div>

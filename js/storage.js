@@ -58,7 +58,14 @@ const DEFAULT_PROGRESS = {
           bestStreak: 0,
           bestTime: null,
           attempts: 0,
-          lastAttempt: null
+          lastAttempt: null,
+          hard: {
+            completed: false,
+            bestScore: 0,
+            bestStreak: 0,
+            bestTime: null,
+            attempts: 0
+          }
         },
         'open-fold': {
           unlocked: false,
@@ -67,7 +74,14 @@ const DEFAULT_PROGRESS = {
           bestStreak: 0,
           bestTime: null,
           attempts: 0,
-          lastAttempt: null
+          lastAttempt: null,
+          hard: {
+            completed: false,
+            bestScore: 0,
+            bestStreak: 0,
+            bestTime: null,
+            attempts: 0
+          }
         },
         'equity-snap': {
           unlocked: false,
@@ -76,7 +90,14 @@ const DEFAULT_PROGRESS = {
           bestStreak: 0,
           bestTime: null,
           attempts: 0,
-          lastAttempt: null
+          lastAttempt: null,
+          hard: {
+            completed: false,
+            bestScore: 0,
+            bestStreak: 0,
+            bestTime: null,
+            attempts: 0
+          }
         },
         'range-check': {
           unlocked: false,
@@ -85,7 +106,14 @@ const DEFAULT_PROGRESS = {
           bestStreak: 0,
           bestTime: null,
           attempts: 0,
-          lastAttempt: null
+          lastAttempt: null,
+          hard: {
+            completed: false,
+            bestScore: 0,
+            bestStreak: 0,
+            bestTime: null,
+            attempts: 0
+          }
         },
         'position-speed': {
           unlocked: false,
@@ -94,7 +122,14 @@ const DEFAULT_PROGRESS = {
           bestStreak: 0,
           bestTime: null,
           attempts: 0,
-          lastAttempt: null
+          lastAttempt: null,
+          hard: {
+            completed: false,
+            bestScore: 0,
+            bestStreak: 0,
+            bestTime: null,
+            attempts: 0
+          }
         }
       },
       totalAttempts: 0,
@@ -110,30 +145,50 @@ const DEFAULT_PROGRESS = {
           completed: false,
           bestScore: 0,
           attempts: 0,
-          lastAttempt: null
+          lastAttempt: null,
+          hard: {
+            completed: false,
+            bestScore: 0,
+            attempts: 0
+          }
         },
         'bb-defense': {
           unlocked: true,
           completed: false,
           bestScore: 0,
           attempts: 0,
-          lastAttempt: null
+          lastAttempt: null,
+          hard: {
+            completed: false,
+            bestScore: 0,
+            attempts: 0
+          }
         },
         '3bet-value': {
           unlocked: true,
           completed: false,
           bestScore: 0,
           attempts: 0,
-          lastAttempt: null
+          lastAttempt: null,
+          hard: {
+            completed: false,
+            bestScore: 0,
+            attempts: 0
+          }
         },
         'sb-3bet-fold': {
           unlocked: true,
           completed: false,
           bestScore: 0,
           attempts: 0,
-          lastAttempt: null
+          lastAttempt: null,
+          hard: {
+            completed: false,
+            bestScore: 0,
+            attempts: 0
+          }
         },
-        // Tier 2: Simplified (requires 2 Tier 1 at 75%+)
+        // Tier 2: Simplified (requires 2 Tier 1 at 75%+) - NO hard mode
         'cold-4bet': {
           unlocked: false,
           completed: false,
@@ -141,7 +196,7 @@ const DEFAULT_PROGRESS = {
           attempts: 0,
           lastAttempt: null
         },
-        // Tier 3: Heuristic (always available - educational)
+        // Tier 3: Heuristic (always available - educational) - NO hard mode
         'board-texture': {
           unlocked: true,
           completed: false,
@@ -178,13 +233,22 @@ const MODULE_ORDER = ['hand-strength', 'position', 'equity', 'ranges'];
 // Drill order for unlocking
 const DRILL_ORDER = ['hand-ranking', 'open-fold', 'equity-snap', 'range-check', 'position-speed'];
 
-// Drill pass thresholds
+// Drill pass thresholds (easy mode)
 const DRILL_THRESHOLDS = {
-  'hand-ranking': 80,
+  'hand-ranking': 75,
   'open-fold': 75,
   'equity-snap': 70,
   'range-check': 75,
   'position-speed': 80
+};
+
+// Drill pass thresholds (hard mode)
+const DRILL_THRESHOLDS_HARD = {
+  'hand-ranking': 80,
+  'open-fold': 80,
+  'equity-snap': 80,
+  'range-check': 80,
+  'position-speed': 85
 };
 
 // Scenario order for unlocking
@@ -193,7 +257,7 @@ const SCENARIO_ORDER = [
   'cold-4bet', 'board-texture'
 ];
 
-// Scenario pass thresholds
+// Scenario pass thresholds (easy mode)
 const SCENARIO_THRESHOLDS = {
   'defend-3bet': 75,
   'bb-defense': 75,
@@ -202,6 +266,18 @@ const SCENARIO_THRESHOLDS = {
   'cold-4bet': 70,
   'board-texture': 80  // Higher threshold for conceptual quiz
 };
+
+// Scenario pass thresholds (hard mode)
+const SCENARIO_THRESHOLDS_HARD = {
+  'defend-3bet': 80,
+  'bb-defense': 80,
+  '3bet-value': 80,
+  'sb-3bet-fold': 80
+  // cold-4bet and board-texture don't have hard mode
+};
+
+// Scenarios that have hard mode (exported for use in scenarios hub)
+export const SCENARIOS_WITH_HARD_MODE = ['defend-3bet', 'bb-defense', '3bet-value', 'sb-3bet-fold'];
 
 // Tier 1 scenarios (available when Stage 3 unlocks)
 const TIER_1_SCENARIOS = ['defend-3bet', 'bb-defense', '3bet-value', 'sb-3bet-fold'];
@@ -536,8 +612,11 @@ export function getAllDrillsProgress() {
 
 /**
  * Update drill progress after completion
+ * @param {string} drillId - The drill ID
+ * @param {Object} stats - The stats from the drill attempt
+ * @param {string} difficulty - 'easy' or 'hard' (default: 'easy')
  */
-export function updateDrillProgress(drillId, stats) {
+export function updateDrillProgress(drillId, stats, difficulty = 'easy') {
   const progress = loadProgress();
   const drillData = progress.stages.drills;
 
@@ -547,57 +626,85 @@ export function updateDrillProgress(drillId, stats) {
   }
 
   const drill = drillData.modules[drillId];
-  const threshold = DRILL_THRESHOLDS[drillId] || 70;
+  const isHard = difficulty === 'hard';
+  const threshold = isHard
+    ? (DRILL_THRESHOLDS_HARD[drillId] || 80)
+    : (DRILL_THRESHOLDS[drillId] || 70);
   const passed = stats.accuracy >= threshold;
 
-  // Update attempt count
-  drill.attempts += 1;
-  drill.lastAttempt = new Date().toISOString();
+  // Update total attempts count
   drillData.totalAttempts += 1;
 
-  // Update best score if higher
-  if (stats.accuracy > drill.bestScore) {
-    drill.bestScore = stats.accuracy;
-  }
-
-  // Update best streak if higher
-  if (stats.bestStreak > drill.bestStreak) {
-    drill.bestStreak = stats.bestStreak;
-  }
-
-  // Update best time if faster (and valid)
-  if (stats.avgTime && (drill.bestTime === null || stats.avgTime < drill.bestTime)) {
-    drill.bestTime = stats.avgTime;
-  }
-
-  // Mark as completed if passed
-  if (passed && !drill.completed) {
-    drill.completed = true;
-
-    // Unlock next drill
-    const currentIndex = DRILL_ORDER.indexOf(drillId);
-    if (currentIndex >= 0 && currentIndex < DRILL_ORDER.length - 1) {
-      const nextDrillId = DRILL_ORDER[currentIndex + 1];
-      if (drillData.modules[nextDrillId]) {
-        drillData.modules[nextDrillId].unlocked = true;
-      }
+  if (isHard) {
+    // Initialize hard stats if needed
+    if (!drill.hard) {
+      drill.hard = { completed: false, bestScore: 0, bestStreak: 0, bestTime: null, attempts: 0 };
     }
 
-    // Check if all drills completed
-    const allCompleted = DRILL_ORDER.every(
-      id => drillData.modules[id]?.completed
-    );
-    if (allCompleted) {
-      drillData.completed = true;
-      // Unlock scenarios stage
-      if (progress.stages.scenarios) {
-        progress.stages.scenarios.unlocked = true;
-      }
+    // Update hard mode stats
+    drill.hard.attempts += 1;
+
+    if (stats.accuracy > drill.hard.bestScore) {
+      drill.hard.bestScore = stats.accuracy;
     }
 
-    // Check for achievements
-    checkDrillAchievements(progress, drillId, stats);
+    if (stats.bestStreak > drill.hard.bestStreak) {
+      drill.hard.bestStreak = stats.bestStreak;
+    }
+
+    if (stats.avgTime && (drill.hard.bestTime === null || stats.avgTime < drill.hard.bestTime)) {
+      drill.hard.bestTime = stats.avgTime;
+    }
+
+    if (passed && !drill.hard.completed) {
+      drill.hard.completed = true;
+    }
+  } else {
+    // Update easy mode stats (existing behavior)
+    drill.attempts += 1;
+    drill.lastAttempt = new Date().toISOString();
+
+    if (stats.accuracy > drill.bestScore) {
+      drill.bestScore = stats.accuracy;
+    }
+
+    if (stats.bestStreak > drill.bestStreak) {
+      drill.bestStreak = stats.bestStreak;
+    }
+
+    if (stats.avgTime && (drill.bestTime === null || stats.avgTime < drill.bestTime)) {
+      drill.bestTime = stats.avgTime;
+    }
+
+    // Mark as completed if passed (easy mode unlocks next drill and hard mode)
+    if (passed && !drill.completed) {
+      drill.completed = true;
+
+      // Unlock next drill
+      const currentIndex = DRILL_ORDER.indexOf(drillId);
+      if (currentIndex >= 0 && currentIndex < DRILL_ORDER.length - 1) {
+        const nextDrillId = DRILL_ORDER[currentIndex + 1];
+        if (drillData.modules[nextDrillId]) {
+          drillData.modules[nextDrillId].unlocked = true;
+        }
+      }
+
+      // Check if all drills completed (easy mode)
+      const allCompleted = DRILL_ORDER.every(
+        id => drillData.modules[id]?.completed
+      );
+      if (allCompleted) {
+        drillData.completed = true;
+        // Unlock scenarios stage
+        if (progress.stages.scenarios) {
+          progress.stages.scenarios.unlocked = true;
+        }
+      }
+    }
   }
+
+  // Check for achievements (for both difficulties)
+  checkDrillAchievements(progress, drillId, stats);
 
   return saveProgress(progress);
 }
@@ -652,9 +759,24 @@ export function isDrillCompleted(drillId) {
 
 /**
  * Get drill pass threshold
+ * @param {string} drillId - The drill ID
+ * @param {string} difficulty - 'easy' or 'hard' (default: 'easy')
  */
-export function getDrillThreshold(drillId) {
+export function getDrillThreshold(drillId, difficulty = 'easy') {
+  if (difficulty === 'hard') {
+    return DRILL_THRESHOLDS_HARD[drillId] || 80;
+  }
   return DRILL_THRESHOLDS[drillId] || 70;
+}
+
+/**
+ * Check if hard mode is unlocked for a drill
+ * @param {string} drillId - The drill ID
+ * @returns {boolean} True if hard mode is unlocked
+ */
+export function isDrillHardModeUnlocked(drillId) {
+  const progress = loadProgress();
+  return progress.stages.drills?.modules[drillId]?.completed === true;
 }
 
 /**
@@ -746,8 +868,11 @@ export function getAllScenariosProgress() {
 
 /**
  * Update scenario progress after completion
+ * @param {string} scenarioId - The scenario ID
+ * @param {Object} stats - The stats from the scenario attempt
+ * @param {string} difficulty - 'easy' or 'hard' (default: 'easy')
  */
-export function updateScenarioProgress(scenarioId, stats) {
+export function updateScenarioProgress(scenarioId, stats, difficulty = 'easy') {
   const progress = loadProgress();
   const scenarioData = progress.stages.scenarios;
 
@@ -757,45 +882,73 @@ export function updateScenarioProgress(scenarioId, stats) {
   }
 
   const scenario = scenarioData.modules[scenarioId];
-  const threshold = SCENARIO_THRESHOLDS[scenarioId] || 75;
+  const isHard = difficulty === 'hard';
+  const hasHardMode = SCENARIOS_WITH_HARD_MODE.includes(scenarioId);
+
+  // Don't allow hard mode for scenarios that don't support it
+  if (isHard && !hasHardMode) {
+    console.error(`Scenario ${scenarioId} does not have hard mode`);
+    return false;
+  }
+
+  const threshold = isHard
+    ? (SCENARIO_THRESHOLDS_HARD[scenarioId] || 80)
+    : (SCENARIO_THRESHOLDS[scenarioId] || 75);
   const passed = stats.accuracy >= threshold;
 
-  // Update attempt count
-  scenario.attempts += 1;
-  scenario.lastAttempt = new Date().toISOString();
-
-  // Update best score if higher
-  if (stats.accuracy > scenario.bestScore) {
-    scenario.bestScore = stats.accuracy;
-  }
-
-  // Mark as completed if passed
-  if (passed && !scenario.completed) {
-    scenario.completed = true;
-
-    // Check if cold-4bet should unlock (requires 2 Tier 1 at 75%+)
-    const tier1Completed = TIER_1_SCENARIOS.filter(
-      id => scenarioData.modules[id]?.bestScore >= 75
-    ).length;
-    if (tier1Completed >= 2 && scenarioData.modules['cold-4bet']) {
-      scenarioData.modules['cold-4bet'].unlocked = true;
+  if (isHard) {
+    // Initialize hard stats if needed
+    if (!scenario.hard) {
+      scenario.hard = { completed: false, bestScore: 0, attempts: 0 };
     }
 
-    // Check if all scenarios completed
-    const allCompleted = SCENARIO_ORDER.every(
-      id => scenarioData.modules[id]?.completed
-    );
-    if (allCompleted) {
-      scenarioData.completed = true;
-      // Unlock full-hands stage
-      if (progress.stages['full-hands']) {
-        progress.stages['full-hands'].unlocked = true;
+    // Update hard mode stats
+    scenario.hard.attempts += 1;
+
+    if (stats.accuracy > scenario.hard.bestScore) {
+      scenario.hard.bestScore = stats.accuracy;
+    }
+
+    if (passed && !scenario.hard.completed) {
+      scenario.hard.completed = true;
+    }
+  } else {
+    // Update easy mode stats (existing behavior)
+    scenario.attempts += 1;
+    scenario.lastAttempt = new Date().toISOString();
+
+    if (stats.accuracy > scenario.bestScore) {
+      scenario.bestScore = stats.accuracy;
+    }
+
+    // Mark as completed if passed (easy mode unlocks next features and hard mode)
+    if (passed && !scenario.completed) {
+      scenario.completed = true;
+
+      // Check if cold-4bet should unlock (requires 2 Tier 1 at 75%+)
+      const tier1Completed = TIER_1_SCENARIOS.filter(
+        id => scenarioData.modules[id]?.bestScore >= 75
+      ).length;
+      if (tier1Completed >= 2 && scenarioData.modules['cold-4bet']) {
+        scenarioData.modules['cold-4bet'].unlocked = true;
+      }
+
+      // Check if all scenarios completed (easy mode)
+      const allCompleted = SCENARIO_ORDER.every(
+        id => scenarioData.modules[id]?.completed
+      );
+      if (allCompleted) {
+        scenarioData.completed = true;
+        // Unlock full-hands stage
+        if (progress.stages['full-hands']) {
+          progress.stages['full-hands'].unlocked = true;
+        }
       }
     }
-
-    // Check for achievements
-    checkScenarioAchievements(progress, scenarioId, stats);
   }
+
+  // Check for achievements (for both difficulties)
+  checkScenarioAchievements(progress, scenarioId, stats);
 
   return saveProgress(progress);
 }
@@ -873,9 +1026,37 @@ export function isScenarioCompleted(scenarioId) {
 
 /**
  * Get scenario pass threshold
+ * @param {string} scenarioId - The scenario ID
+ * @param {string} difficulty - 'easy' or 'hard' (default: 'easy')
  */
-export function getScenarioThreshold(scenarioId) {
+export function getScenarioThreshold(scenarioId, difficulty = 'easy') {
+  if (difficulty === 'hard') {
+    return SCENARIO_THRESHOLDS_HARD[scenarioId] || 80;
+  }
   return SCENARIO_THRESHOLDS[scenarioId] || 75;
+}
+
+/**
+ * Check if hard mode is unlocked for a scenario
+ * @param {string} scenarioId - The scenario ID
+ * @returns {boolean} True if hard mode is unlocked
+ */
+export function isScenarioHardModeUnlocked(scenarioId) {
+  // First check if this scenario even has hard mode
+  if (!SCENARIOS_WITH_HARD_MODE.includes(scenarioId)) {
+    return false;
+  }
+  const progress = loadProgress();
+  return progress.stages.scenarios?.modules[scenarioId]?.completed === true;
+}
+
+/**
+ * Check if a scenario has hard mode
+ * @param {string} scenarioId - The scenario ID
+ * @returns {boolean} True if the scenario supports hard mode
+ */
+export function scenarioHasHardMode(scenarioId) {
+  return SCENARIOS_WITH_HARD_MODE.includes(scenarioId);
 }
 
 /**
