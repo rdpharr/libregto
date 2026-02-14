@@ -39,7 +39,7 @@ function renderHomePage() {
     <div class="home container">
       <div class="home__hero animate-fade-in-up">
         <h1 class="home__logo">Libre<span class="home__logo-accent">GTO</span></h1>
-        <p class="home__tagline">Master GTO poker strategy through interactive lessons and real-time practice</p>
+        <p class="home__tagline">Start learning GTO poker strategy through interactive lessons and real-time practice</p>
         <div class="home__cta">
           <a href="#/foundations" class="btn btn--primary btn--lg">Start Learning</a>
           <button class="btn btn--secondary btn--lg" onclick="window.location.hash='#/about'">How it Works</button>
@@ -303,6 +303,7 @@ function renderAboutPage() {
 
         <div class="mt-8">
           <a href="#/foundations" class="btn btn--primary btn--lg">Start Learning</a>
+          <a href="#/methodology" class="btn btn--secondary btn--lg" style="margin-left: var(--space-3);">Our Methodology</a>
         </div>
       </div>
     </div>
