@@ -6,24 +6,6 @@
 
 import { router } from './router.js';
 import { loadProgress, getStageProgress, isStageUnlocked, getCurrentModule, getOverallProgress, getDrillStats } from './storage.js';
-import { renderHandStrengthModule } from './modules/handStrength.js';
-import { renderPositionModule } from './modules/position.js';
-import { renderEquityModule } from './modules/equity.js';
-import { renderRangesModule } from './modules/ranges.js';
-import { renderDrillsHub } from './drills/index.js';
-import { renderHandRankingDrill } from './drills/handRankDrill.js';
-import { renderOpenFoldDrill } from './drills/openFoldDrill.js';
-import { renderEquitySnapDrill } from './drills/equitySnapDrill.js';
-import { renderRangeCheckDrill } from './drills/rangeCheckDrill.js';
-import { renderPositionDrill } from './drills/positionDrill.js';
-import { renderScenariosHub } from './scenarios/index.js';
-import { renderDefendVs3BetScenario } from './scenarios/preflopDefend3bet.js';
-import { renderBBDefenseScenario } from './scenarios/preflopBBDefense.js';
-import { render3BetValueScenario } from './scenarios/preflop3betValue.js';
-import { renderSB3BetOrFoldScenario } from './scenarios/preflopSB3betOrFold.js';
-import { renderCold4BetScenario } from './scenarios/preflopCold4bet.js';
-import { renderBoardTextureScenario } from './scenarios/postflopBoardTexture.js';
-import { renderMethodologyPage } from './pages/methodology.js';
 
 // Main content container
 const mainContent = document.getElementById('main-content');
@@ -180,22 +162,30 @@ function renderFoundationsPage() {
 /**
  * Render a module page
  */
-function renderModulePage(params) {
+async function renderModulePage(params) {
   const moduleId = params.id;
 
   switch (moduleId) {
-    case 'hand-strength':
+    case 'hand-strength': {
+      const { renderHandStrengthModule } = await import('./modules/handStrength.js');
       renderHandStrengthModule(mainContent);
       break;
-    case 'position':
+    }
+    case 'position': {
+      const { renderPositionModule } = await import('./modules/position.js');
       renderPositionModule(mainContent);
       break;
-    case 'equity':
+    }
+    case 'equity': {
+      const { renderEquityModule } = await import('./modules/equity.js');
       renderEquityModule(mainContent);
       break;
-    case 'ranges':
+    }
+    case 'ranges': {
+      const { renderRangesModule } = await import('./modules/ranges.js');
       renderRangesModule(mainContent);
       break;
+    }
     default:
       render404();
   }
@@ -339,25 +329,35 @@ function renderComingSoon(stageName) {
 /**
  * Render a drill page
  */
-function renderDrillPage(params) {
+async function renderDrillPage(params) {
   const drillId = params.id;
 
   switch (drillId) {
-    case 'hand-ranking':
+    case 'hand-ranking': {
+      const { renderHandRankingDrill } = await import('./drills/handRankDrill.js');
       renderHandRankingDrill(mainContent);
       break;
-    case 'open-fold':
+    }
+    case 'open-fold': {
+      const { renderOpenFoldDrill } = await import('./drills/openFoldDrill.js');
       renderOpenFoldDrill(mainContent);
       break;
-    case 'equity-snap':
+    }
+    case 'equity-snap': {
+      const { renderEquitySnapDrill } = await import('./drills/equitySnapDrill.js');
       renderEquitySnapDrill(mainContent);
       break;
-    case 'range-check':
+    }
+    case 'range-check': {
+      const { renderRangeCheckDrill } = await import('./drills/rangeCheckDrill.js');
       renderRangeCheckDrill(mainContent);
       break;
-    case 'position-speed':
+    }
+    case 'position-speed': {
+      const { renderPositionDrill } = await import('./drills/positionDrill.js');
       renderPositionDrill(mainContent);
       break;
+    }
     default:
       render404();
   }
@@ -366,28 +366,40 @@ function renderDrillPage(params) {
 /**
  * Render a scenario page
  */
-function renderScenarioPage(params) {
+async function renderScenarioPage(params) {
   const scenarioId = params.id;
 
   switch (scenarioId) {
-    case 'defend-3bet':
+    case 'defend-3bet': {
+      const { renderDefendVs3BetScenario } = await import('./scenarios/preflopDefend3bet.js');
       renderDefendVs3BetScenario(mainContent);
       break;
-    case 'bb-defense':
+    }
+    case 'bb-defense': {
+      const { renderBBDefenseScenario } = await import('./scenarios/preflopBBDefense.js');
       renderBBDefenseScenario(mainContent);
       break;
-    case '3bet-value':
+    }
+    case '3bet-value': {
+      const { render3BetValueScenario } = await import('./scenarios/preflop3betValue.js');
       render3BetValueScenario(mainContent);
       break;
-    case 'sb-3bet-fold':
+    }
+    case 'sb-3bet-fold': {
+      const { renderSB3BetOrFoldScenario } = await import('./scenarios/preflopSB3betOrFold.js');
       renderSB3BetOrFoldScenario(mainContent);
       break;
-    case 'cold-4bet':
+    }
+    case 'cold-4bet': {
+      const { renderCold4BetScenario } = await import('./scenarios/preflopCold4bet.js');
       renderCold4BetScenario(mainContent);
       break;
-    case 'board-texture':
+    }
+    case 'board-texture': {
+      const { renderBoardTextureScenario } = await import('./scenarios/postflopBoardTexture.js');
       renderBoardTextureScenario(mainContent);
       break;
+    }
     default:
       render404();
   }
@@ -397,13 +409,22 @@ function renderScenarioPage(params) {
 router.register('/', renderHomePage);
 router.register('/foundations', renderFoundationsPage);
 router.register('/module/:id', renderModulePage);
-router.register('/drills', () => renderDrillsHub(mainContent));
+router.register('/drills', async () => {
+  const { renderDrillsHub } = await import('./drills/index.js');
+  renderDrillsHub(mainContent);
+});
 router.register('/drill/:id', renderDrillPage);
 router.register('/settings', renderSettingsPage);
 router.register('/about', renderAboutPage);
-router.register('/scenarios', () => renderScenariosHub(mainContent));
+router.register('/scenarios', async () => {
+  const { renderScenariosHub } = await import('./scenarios/index.js');
+  renderScenariosHub(mainContent);
+});
 router.register('/scenario/:id', renderScenarioPage);
-router.register('/methodology', () => renderMethodologyPage(mainContent));
+router.register('/methodology', async () => {
+  const { renderMethodologyPage } = await import('./pages/methodology.js');
+  renderMethodologyPage(mainContent);
+});
 router.register('/full-hands', () => renderComingSoon('Full Hands'));
 router.register('*', render404);
 
